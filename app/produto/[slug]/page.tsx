@@ -102,6 +102,22 @@ export default function ProdutoPage() {
     setNotification({ msg: 'ITEM ADICIONADO AO INVENTÁRIO!', error: false })
   }
 
+  const [validImages, setValidImages] = useState<string[]>([])
+
+  useEffect(() => {
+    if (images.length === 0) return
+    setValidImages(images)
+    setSlideIndex(0)
+  }, [product])
+
+  function handleImgError(url: string) {
+    setValidImages(prev => {
+      const next = prev.filter(u => u !== url)
+      setSlideIndex(i => Math.min(i, Math.max(0, next.length - 1)))
+      return next
+    })
+  }
+
   function handleTouchStart(e: React.TouchEvent) {
     setTouchStart(e.targetTouches[0].clientX)
   }
@@ -109,9 +125,10 @@ export default function ProdutoPage() {
   function handleTouchEnd(e: React.TouchEvent) {
     if (touchStart === null) return
     const delta = touchStart - e.changedTouches[0].clientX
-    if (Math.abs(delta) > 50) {
-      if (delta > 0) setSlideIndex(i => (i + 1) % images.length)
-      else setSlideIndex(i => (i - 1 + images.length) % images.length)
+    const count = validImages.length || images.length
+    if (Math.abs(delta) > 40) {
+      if (delta > 0) setSlideIndex(i => (i + 1) % count)
+      else setSlideIndex(i => (i - 1 + count) % count)
     }
     setTouchStart(null)
   }
@@ -150,25 +167,35 @@ export default function ProdutoPage() {
 
       <div id="product-detail">
         <div className="product-images">
+          {/* Swipe carousel — sem setas, deslize lateral */}
           <div
             className="carousel-container"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
+            style={{ overflow: 'hidden', touchAction: 'pan-y' }}
           >
-            {images.map((img, i) => (
-              <div key={i} className={`carousel-item${i === slideIndex ? ' active' : ''}`}
-                style={{ display: i === slideIndex ? 'block' : 'none' }}>
-                <img src={img} alt={product.name} style={{ cursor: 'zoom-in' }}
-                  onClick={() => setZoomSrc(img)}
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-              </div>
-            ))}
-            <span className="prev" onClick={() => setSlideIndex(i => (i - 1 + images.length) % images.length)}>&#10094;</span>
-            <span className="next" onClick={() => setSlideIndex(i => (i + 1) % images.length)}>&#10095;</span>
+            <div style={{
+              display: 'flex',
+              transform: `translateX(-${slideIndex * 100}%)`,
+              transition: 'transform 0.3s ease',
+              willChange: 'transform',
+            }}>
+              {(validImages.length > 0 ? validImages : images).map((img, i) => (
+                <div key={img} style={{ minWidth: '100%', boxSizing: 'border-box' }}>
+                  <img
+                    src={img}
+                    alt={`${product.name} ${i + 1}`}
+                    style={{ width: '100%', height: 'auto', display: 'block', cursor: 'zoom-in', borderRadius: 6, border: '2px solid #f5c542' }}
+                    onClick={() => setZoomSrc(img)}
+                    onError={() => handleImgError(img)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="carousel-dots">
-            {images.map((_, i) => (
+            {(validImages.length > 0 ? validImages : images).map((_, i) => (
               <button
                 key={i}
                 className={`carousel-dot${i === slideIndex ? ' active' : ''}`}
