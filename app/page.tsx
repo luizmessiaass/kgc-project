@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ExploreBar from './components/ExploreBar'
 
 export default function HomePage() {
   const [showMenu, setShowMenu] = useState(false)
   const [showInitOverlay, setShowInitOverlay] = useState(false)
-  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     if (window.location.hash === '#menu') setShowMenu(true)
@@ -20,10 +19,6 @@ export default function HomePage() {
   }, [])
 
   function handleEnter() {
-    if (audioRef.current) {
-      audioRef.current.volume = 0.2
-      audioRef.current.play().catch(() => {})
-    }
     setShowInitOverlay(true)
     setTimeout(() => {
       setShowInitOverlay(false)
@@ -48,11 +43,7 @@ export default function HomePage() {
         {showMenu && (
           <div id="main-menu">
             <div className="brand" style={{ textAlign: 'center', marginBottom: 16 }}>
-              <img
-                src="/assets/logo.gif"
-                alt="KGC"
-                className="kgc-logo menu-logo"
-              />
+              <img src="/assets/logo.gif" alt="KGC" className="kgc-logo menu-logo" />
             </div>
 
             <div className="menu-grid">
@@ -92,10 +83,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
-      <audio ref={audioRef} loop>
-        <source src="/intro.mp3" type="audio/mpeg" />
-      </audio>
 
       <div className={`init-overlay${showInitOverlay ? ' active' : ''}`}>
         <p>Inicializando sistema...</p>
