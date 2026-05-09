@@ -27,6 +27,7 @@ export default function ProdutoPage() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [zoomSrc, setZoomSrc] = useState<string | null>(null)
   const [notification, setNotification] = useState<{ msg: string; error: boolean } | null>(null)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
 
   useEffect(() => {
     supabase
@@ -73,6 +74,20 @@ export default function ProdutoPage() {
     setNotification({ msg: 'ITEM ADICIONADO AO INVENTÁRIO!', error: false })
   }
 
+  function handleTouchStart(e: React.TouchEvent) {
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStart === null) return
+    const delta = touchStart - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 50) {
+      if (delta > 0) setSlideIndex(i => (i + 1) % images.length)
+      else setSlideIndex(i => (i - 1 + images.length) % images.length)
+    }
+    setTouchStart(null)
+  }
+
   if (notFound) return (
     <div className="layout-page">
       <h2>Produto não encontrado.</h2>
@@ -93,7 +108,7 @@ export default function ProdutoPage() {
   return (
     <div className="layout-page">
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
+        <Link href="/#menu" style={{ textDecoration: 'none' }}>
           <h1 style={{ margin: 0, display: 'inline-block' }}>KGC</h1>
         </Link>
       </div>
@@ -107,7 +122,11 @@ export default function ProdutoPage() {
 
       <div id="product-detail">
         <div className="product-images">
-          <div className="carousel-container">
+          <div
+            className="carousel-container"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {images.map((img, i) => (
               <div key={i} className={`carousel-item${i === slideIndex ? ' active' : ''}`}
                 style={{ display: i === slideIndex ? 'block' : 'none' }}>
@@ -118,6 +137,17 @@ export default function ProdutoPage() {
             ))}
             <span className="prev" onClick={() => setSlideIndex(i => (i - 1 + images.length) % images.length)}>&#10094;</span>
             <span className="next" onClick={() => setSlideIndex(i => (i + 1) % images.length)}>&#10095;</span>
+          </div>
+
+          <div className="carousel-dots">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                className={`carousel-dot${i === slideIndex ? ' active' : ''}`}
+                onClick={() => setSlideIndex(i)}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
 
@@ -169,14 +199,8 @@ export default function ProdutoPage() {
       </div>
 
       {notification && (
-        <div style={{
-          display: 'flex', position: 'fixed', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)', background: '#111',
-          border: '2px solid #f5c542', padding: 25, zIndex: 9999,
-          flexDirection: 'column', gap: 20, width: '90%', maxWidth: 350,
-          boxShadow: '0 0 30px rgba(0,0,0,0.9)', textAlign: 'center',
-        }}>
-          <p style={{ fontFamily: "'Press Start 2P'", fontSize: '0.8rem', margin: 0, lineHeight: 1.6, color: notification.error ? '#ff5555' : '#f5c542' }}>
+        <div className="retro-notification" role="alertdialog" aria-modal="true">
+          <p style={{ fontFamily: "'Press Start 2P'", fontSize: '0.75rem', margin: 0, lineHeight: 1.7, color: notification.error ? '#ff5555' : '#f5c542' }}>
             {notification.msg}
           </p>
           <button onClick={() => setNotification(null)}>OK</button>
