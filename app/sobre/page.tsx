@@ -3,7 +3,12 @@ import ExploreBar from '../components/ExploreBar'
 
 export default function SobrePage() {
   return (
-    <div className="layout-page" style={{ padding: 'clamp(40px,6vh,70px) clamp(16px,4vw,40px) 140px' }}>
+    <div className="layout-page" style={{
+      paddingTop: 'max(clamp(40px,6vh,70px), calc(var(--safe-top, 0px) + 24px))',
+      paddingBottom: '140px',
+      paddingLeft: 'clamp(16px,4vw,40px)',
+      paddingRight: 'clamp(16px,4vw,40px)',
+    }}>
       <h2>SOBRE NÓS</h2>
       <p>A &quot;Keep going, corredor!&quot; (KGC) não é apenas uma marca de streetwear; é um movimento que veste a mentalidade <strong>&quot;Hustler&quot;</strong>. É a expressão em forma de roupa daquele espírito incansável que pulsa nas ruas da cidade, nos coworkings criativos, nos estúdios de arte e em cada canto onde um empreendedor, artista ou criativo está construindo seu futuro com as próprias mãos.</p>
 

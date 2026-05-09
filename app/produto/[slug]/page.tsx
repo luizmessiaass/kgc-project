@@ -139,7 +139,7 @@ export default function ProdutoPage() {
           <div className="options">
             <div className="colors">
               <span style={{ fontFamily: "'Press Start 2P', monospace", color: '#f5c542', fontSize: '0.8rem' }}>Cor:</span>
-              <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 5, marginLeft: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                 {colors.length === 0
                   ? <span style={{ fontSize: '0.7rem', color: '#777' }}>Única</span>
                   : colors.map(c => (
@@ -150,7 +150,7 @@ export default function ProdutoPage() {
             </div>
             <div className="sizes" style={{ marginTop: 15 }}>
               <span style={{ fontFamily: "'Press Start 2P', monospace", color: '#f5c542', fontSize: '0.8rem' }}>Tamanho:</span>
-              <div id="size-options" style={{ marginTop: 5 }}>
+              <div id="size-options" style={{ marginTop: 8 }}>
                 {sizes.length === 0
                   ? <span style={{ fontSize: '0.7rem', color: '#777' }}>Único</span>
                   : sizes.map(s => (

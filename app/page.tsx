@@ -32,7 +32,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="layout-home">
+    <div className={`layout-home${showMenu ? ' menu-open' : ''}`}>
       <div id="retro-monitor">
         {!showMenu && (
           <div id="start-screen">
@@ -47,12 +47,11 @@ export default function HomePage() {
 
         {showMenu && (
           <div id="main-menu">
-            <div className="brand" style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div className="brand" style={{ textAlign: 'center', marginBottom: 16 }}>
               <img
                 src="/assets/logo.gif"
                 alt="KGC"
-                className="kgc-logo"
-                style={{ width: 150, height: 'auto' }}
+                className="kgc-logo menu-logo"
               />
             </div>
 

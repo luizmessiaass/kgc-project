@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Cart from './components/Cart'
 
@@ -6,6 +6,14 @@ export const metadata: Metadata = {
   title: 'KGC',
   description: 'KGC - Streetwear',
   icons: { icon: '/assets/logo.gif' },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#000000',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

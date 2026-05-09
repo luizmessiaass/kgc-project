@@ -25,15 +25,12 @@ export default function ContatoPage() {
 
       {sent && <p style={{ textAlign: 'center', color: '#f5c542', fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem' }}>Mensagem enviada! Em breve entraremos em contato.</p>}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 400, margin: '0 auto' }}>
-          <input type="text" name="nome" placeholder="Seu nome" required
-            style={{ padding: 10, borderRadius: 5, border: '1px solid #444', background: '#111', color: '#fff', fontFamily: "'Oswald', sans-serif", fontSize: 16 }} />
-          <input type="email" name="email" placeholder="Seu email" required
-            style={{ padding: 10, borderRadius: 5, border: '1px solid #444', background: '#111', color: '#fff', fontFamily: "'Oswald', sans-serif", fontSize: 16 }} />
-          <textarea name="mensagem" placeholder="Sua mensagem" rows={4} required
-            style={{ padding: 10, borderRadius: 5, border: '1px solid #444', background: '#111', color: '#fff', fontFamily: "'Oswald', sans-serif", fontSize: 16, resize: 'vertical' }} />
-          <button type="submit">Enviar</button>
+      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input className="input-retro" type="text" name="nome" placeholder="Seu nome" required />
+          <input className="input-retro" type="email" name="email" placeholder="Seu email" required />
+          <textarea className="input-retro" name="mensagem" placeholder="Sua mensagem" rows={4} required style={{ resize: 'vertical' }} />
+          <button type="submit" className="btn-submit">Enviar</button>
         </div>
       </form>
 

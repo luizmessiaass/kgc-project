@@ -100,7 +100,7 @@ export default function CheckoutPage() {
         <Link href="/"><img src="/assets/logo.gif" alt="KGC" style={{ width: 120, height: 'auto' }} /></Link>
       </div>
 
-      <h1 style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 20 }}>Finalizar Pedido</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: 20 }}>Finalizar Pedido</h1>
 
       {/* Resumo */}
       <div id="order-summary">

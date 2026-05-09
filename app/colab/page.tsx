@@ -4,7 +4,10 @@ import ExploreBar from '../components/ExploreBar'
 export default function ColabPage() {
   return (
     <div className="layout-page" style={{
-      padding: '34px 18px 110px',
+      paddingTop: 'max(60px, calc(var(--safe-top, 0px) + 28px))',
+      paddingBottom: 'calc(110px + var(--safe-bottom, 0px))',
+      paddingLeft: 'max(18px, calc(var(--safe-left, 0px) + 18px))',
+      paddingRight: 'max(18px, calc(var(--safe-right, 0px) + 18px))',
       background: 'radial-gradient(900px circle at 50% -10%, rgba(245,197,66,.16), rgba(0,0,0,0) 55%), radial-gradient(700px circle at 15% 75%, rgba(255,255,255,.06), rgba(0,0,0,0) 60%)',
     }}>
       <h1 style={{ textAlign: 'center', margin: '10px 0 8px', textShadow: '0 0 18px rgba(245,197,66,.22)' }}>Collabs</h1>

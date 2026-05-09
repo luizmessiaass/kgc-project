@@ -31,7 +31,7 @@ export default function ExploreBar({ pageId }: { pageId: string }) {
   return (
     <>
       <div className="explore-bar">
-        <span>EXPLORAÇÃO DO SITE</span>
+        <span className="explore-label">EXPLORE</span>
         <div className="explore-track">
           <div className="explore-progress" style={{ width: `${progress}%` }} />
         </div>
