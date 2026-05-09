@@ -685,6 +685,9 @@ button:hover {
   /* Remove extra padding — layout-page already provides it */
   padding: 0;
   box-sizing: border-box;
+  /* Prevent any child from causing horizontal scroll */
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 #product-detail .actions {
@@ -699,20 +702,40 @@ button:hover {
     flex-direction: column;
     align-items: stretch;
     gap: 20px;
+    /* Belt-and-suspenders: no horizontal bleed on mobile */
+    overflow-x: hidden;
+    width: 100%;
   }
   #product-detail .product-images,
   #product-detail .product-info {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    box-sizing: border-box;
   }
-  /* Options section: full width */
+  /* Options section: full width, wrap buttons */
   #product-detail .options {
     width: 100%;
+    box-sizing: border-box;
+  }
+  /* Color/size button rows: always wrap, no fixed widths */
+  #product-detail .options > div > div,
+  #product-detail .colors > div,
+  #product-detail .sizes > div,
+  #size-options {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px;
   }
   /* Labels for color/size (inline-styled in JSX, boost via specificity) */
   #product-detail .options span {
     font-size: 0.7rem !important;
+  }
+  /* Description text: never scroll horizontally */
+  #product-detail .product-info > p {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
   }
 }
 

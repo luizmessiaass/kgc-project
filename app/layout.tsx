@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Cart from './components/Cart'
+import AudioManager from './components/AudioManager'
 
 export const metadata: Metadata = {
   title: 'KGC',
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <Cart />
+        <AudioManager />
       </body>
     </html>
   )
