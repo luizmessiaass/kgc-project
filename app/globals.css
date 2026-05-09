@@ -333,9 +333,11 @@ h2 { font-size: clamp(0.8rem, 3.5vw, 1.6rem); }
 /* --- LOJA --- */
 #store {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  padding: var(--pad);
+  /* 2 columns on mobile: roomier cards, proper touch targets */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  /* No extra horizontal padding — layout-page already handles it */
+  padding: 0;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -344,6 +346,105 @@ h2 { font-size: clamp(0.8rem, 3.5vw, 1.6rem); }
 }
 @media (min-width: 900px) {
   #store { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+}
+
+/* Search + sort controls bar */
+.store-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  flex-wrap: wrap;
+}
+
+.store-search {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: #111;
+  border: 2px solid #f5c542;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  box-sizing: border-box;
+  outline: none;
+  /* Override global font-size:16px only on this input to avoid iOS zoom */
+  font-size: max(16px, 0.6rem);
+  transition: border-color 0.2s;
+}
+.store-search::placeholder { color: #555; }
+.store-search:focus { border-color: #fff; }
+
+.store-sort {
+  flex-shrink: 0;
+  padding: 12px 10px;
+  background: #111;
+  border: 2px solid #f5c542;
+  border-radius: 6px;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  font-size: max(16px, 0.55rem);
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  min-height: 44px;
+  touch-action: manipulation;
+  appearance: none;
+  -webkit-appearance: none;
+  /* Custom dropdown arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23f5c542'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.store-sort:focus { border-color: #fff; }
+
+@media (max-width: 480px) {
+  .store-controls { flex-direction: column; gap: 8px; }
+  .store-search,
+  .store-sort { width: 100%; }
+}
+
+/* Skeleton loading cards */
+.skeleton-card {
+  background: #111;
+  border: 2px solid #333;
+  border-radius: 8px;
+  aspect-ratio: 3 / 4;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Discount badge on product card */
+.card-discount-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #B22222;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  padding: 3px 5px;
+  border-radius: 3px;
+  line-height: 1;
+  z-index: 1;
+  pointer-events: none;
 }
 
 button {
@@ -985,12 +1086,17 @@ button:hover {
 
 /* Product card */
 .product-card {
+  display: block;
   background: #111;
   border: 2px solid #f5c542;
   border-radius: 8px;
   padding: 10px;
   text-align: center;
   transition: transform 0.2s;
+  /* Ensure the whole card is a generous touch target */
+  min-height: 44px;
+  touch-action: manipulation;
+  box-sizing: border-box;
 }
 .product-card:hover {
   transform: translateY(-5px);
@@ -1001,17 +1107,29 @@ button:hover {
   aspect-ratio: 1/1;
   object-fit: cover;
   border-radius: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  display: block;
 }
 .product-card h3 {
-  font-size: 0.8rem;
-  margin: 10px 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.5rem, 2vw, 0.8rem);
+  margin: 8px 0 6px;
   color: #fff;
+  /* Truncate long names cleanly */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.3;
 }
-.product-card p { color: #f5c542; font-weight: bold; }
+.product-card p {
+  color: #f5c542;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.55rem, 2.2vw, 0.85rem);
+  margin: 0;
+  line-height: 1.4;
+}
 
 /* Back link */
 .voltar-container {
@@ -1203,9 +1321,29 @@ input, select, textarea { font-size: 16px; }
   }
 }
 
+/* === LOJA MOBILE === */
+@media (max-width: 600px) {
+  /* Tighter card gap on small phones */
+  #store { gap: 10px; }
+
+  /* Card: reduce internal padding so image has more room */
+  .product-card { padding: 8px; border-radius: 6px; }
+
+  /* Price: floor at 0.55rem so it stays readable without zoom */
+  .product-card p { font-size: 0.55rem; }
+
+  /* Heading block: keep compact but not cramped */
+  .layout-page h1 { margin-bottom: 10px; }
+
+  /* "Voltar ao Menu" — push it well clear of the explore bar (fixed ~56px + safe-area) */
+  .voltar-container { margin: 28px 0 16px; }
+
+  /* Loading state: centered horizontally inside the grid area */
+  #store > p { grid-column: 1 / -1; text-align: center; padding: 24px 0; }
+}
+
 @media (max-width: 480px) {
   .menu-grid { gap: 8px; padding: 10px; }
-  .product-card h3 { font-size: 0.65rem; }
   .checkout-form-container { padding: 0 8px; }
   #order-summary { padding: 14px; }
 }
@@ -1213,6 +1351,9 @@ input, select, textarea { font-size: 16px; }
 @media (max-width: 375px) {
   .menu-grid { gap: 6px; padding: 8px; }
   .menu-tile span { font-size: 0.42rem; }
+  /* Even tighter on 375px — keep name legible */
+  #store { gap: 8px; }
+  .product-card { padding: 6px; }
 }
 
 /* Remover hover sticky em touch devices */
