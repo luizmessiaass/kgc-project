@@ -1,0 +1,1647 @@
+/**
+ * Show the main menu.  When the user presses Start on the home screen we
+ * hide the start screen overlay and reveal the menu within the retro
+ * monitor.  We also start playing the background music.
+ */
+function enterScene() {
+  const startScreen = document.getElementById('start-screen');
+  const mainMenu = document.getElementById('main-menu');
+  // Hide the start screen
+  if (startScreen) startScreen.style.display = 'none';
+  // Show the main menu by setting it to a flex container
+  if (mainMenu) {
+    // remove any hidden class from main menu and set display flex
+    mainMenu.classList.remove('hidden');
+    mainMenu.style.display = 'flex';
+  }
+  // Reveal the cart icon after entering the scene
+  const cartIcon = document.getElementById('cart-icon');
+  if (cartIcon) {
+    cartIcon.style.display = 'flex';
+  }
+  // Start background music at a gentle volume
+  const audio = document.getElementById('bg-music');
+  if (audio) {
+    audio.volume = 0.2;
+    audio.play();
+  }
+
+  // Update the cart count in case there are items from previous sessions
+  updateCartCount();
+}
+
+/*
+ * Global cart state
+ *
+ * We persist the cart in localStorage so that items remain in the cart
+ * across page navigations. When the script loads we attempt to read
+ * the existing cart; if none exists we start with an empty array.
+ */
+let cart = [];
+try {
+  const storedCart = localStorage.getItem('cart');
+  cart = storedCart ? JSON.parse(storedCart) : [];
+} catch (err) {
+  cart = [];
+}
+
+// Persist the cart to localStorage
+function saveCart() {
+  try {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  } catch (err) {
+    // localStorage can be unavailable in some environments; fail silently
+  }
+}
+
+/**
+ * Add a product to the cart.
+ *
+ * @param {string} product - The name of the product.
+ * @param {number} price - The price of the product.
+ */
+function addToCart(product, price) {
+  cart.push({ product, price });
+  updateCart();
+  saveCart();
+  updateCartCount();
+}
+
+/**
+ * Update the cart display on pages that have a cart element. If the
+ * current page does not contain the cart list (e.g. on the home
+ * page), the function returns without making changes. The total
+ * price is recalculated and displayed when applicable.
+ */
+function updateCart() {
+  const cartList = document.getElementById('cart');
+  const totalEl = document.getElementById('total');
+  if (!cartList || !totalEl) return;
+  let totalPrice = 0;
+  cartList.innerHTML = "";
+  cart.forEach((item, index) => {
+    totalPrice += item.price;
+    const li = document.createElement('li');
+    li.textContent = `${item.product} - R$${item.price.toFixed(2)}`;
+    // Add a remove button for each cart item
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Remover';
+    removeBtn.classList.add('remove-btn');
+    removeBtn.onclick = () => removeFromCart(index);
+    li.appendChild(removeBtn);
+    cartList.appendChild(li);
+  });
+  totalEl.textContent = `Total: R$${totalPrice.toFixed(2)}`;
+}
+
+/**
+ * Remove an item from the cart by index and update the display.
+ * @param {number} index
+ */
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCart();
+  saveCart();
+  updateCartCount();
+}
+
+/**
+ * Clear the cart entirely.
+ */
+function clearCart() {
+  cart = [];
+  updateCart();
+  saveCart();
+  updateCartCount();
+}
+
+/**
+ * Parse the query string of the current URL and return a map of
+ * key/value pairs. This helper is used to read the product id when
+ * loading the product detail page.
+ *
+ * @returns {Object}
+ */
+function getQueryParams() {
+  const params = {};
+  const query = window.location.search.substring(1);
+  query.split('&').forEach(pair => {
+    const [key, value] = pair.split('=');
+    if (key) params[decodeURIComponent(key)] = decodeURIComponent(value);
+  });
+  return params;
+}
+
+/**
+ * Load product data from the global products array based on the id
+ * specified in the URL query parameters. Populate the page with the
+ * product's image, name, description and price. If no valid id is
+ * provided, the user is redirected back to the store page.
+ */
+function loadProduct() {
+  if (typeof products === 'undefined') return;
+  const params = getQueryParams();
+  const id = parseInt(params.id, 10);
+  const product = products.find(p => p.id === id);
+  if (!product) {
+    // If the product doesn't exist, go back to the store
+    window.location.href = 'loja.html';
+    return;
+  }
+  // Populate the product detail elements
+  const imageEl = document.getElementById('product-image');
+  const nameEl = document.getElementById('product-name');
+  const descEl = document.getElementById('product-description');
+  const priceEl = document.getElementById('product-price');
+  const originalPriceEl = document.getElementById('product-original-price');
+  const discountBadgeEl = document.getElementById('product-discount-badge');
+  const paymentInfoEl = document.getElementById('payment-info');
+  if (imageEl) imageEl.src = product.image;
+  if (imageEl) imageEl.alt = product.name;
+  if (nameEl) nameEl.textContent = product.name;
+  if (descEl) descEl.textContent = product.description;
+  if (priceEl) priceEl.textContent = `R$${product.price.toFixed(2)}`;
+  if (originalPriceEl) originalPriceEl.textContent = product.originalPrice ? `R$${product.originalPrice.toFixed(2)}` : '';
+  if (discountBadgeEl && product.discount) {
+    discountBadgeEl.textContent = `-${Math.round(product.discount * 100)}%`;
+  }
+  if (paymentInfoEl) {
+    const parcela = (product.price / 10).toFixed(2);
+    paymentInfoEl.textContent = `ou em até 10x de R$${parcela} sem juros`;
+  }
+
+  // Display an estimated shipping date. We approximate delivery within 7 days
+  // for demonstration purposes. In a real application this could be
+  // calculated based on the user's location and shipping method.
+  const shippingEl = document.getElementById('shipping-info');
+  if (shippingEl) {
+    const now = new Date();
+    // Add 7 days
+    const deliveryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    // Format date as DD/MM/YYYY for Brazilian locale
+    const day = String(deliveryDate.getDate()).padStart(2, '0');
+    const month = String(deliveryDate.getMonth() + 1).padStart(2, '0');
+    const year = deliveryDate.getFullYear();
+    shippingEl.textContent = `Receba até ${day}/${month}/${year} • Frete grátis para todo o Brasil`;
+  }
+  // Populate color options
+  const colorContainer = document.getElementById('color-options');
+  if (colorContainer && product.colors) {
+    colorContainer.innerHTML = '';
+    product.colors.forEach(color => {
+      const swatch = document.createElement('div');
+      swatch.classList.add('color-swatch');
+      // set background color - if it's a named color we can use it directly
+      swatch.style.background = color;
+      swatch.title = color;
+      swatch.onclick = () => {
+        // remove selection from other swatches
+        colorContainer.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+      };
+      colorContainer.appendChild(swatch);
+    });
+    // select first color by default
+    const first = colorContainer.querySelector('.color-swatch');
+    if (first) first.classList.add('selected');
+  }
+  // Populate size options
+  const sizeContainer = document.getElementById('size-options');
+  if (sizeContainer && product.sizes) {
+    sizeContainer.innerHTML = '';
+    product.sizes.forEach(size => {
+      const opt = document.createElement('div');
+      opt.classList.add('size-option');
+      opt.textContent = size;
+      opt.onclick = () => {
+        sizeContainer.querySelectorAll('.size-option').forEach(s => s.classList.remove('selected'));
+        opt.classList.add('selected');
+      };
+      sizeContainer.appendChild(opt);
+    });
+    const firstSize = sizeContainer.querySelector('.size-option');
+    if (firstSize) firstSize.classList.add('selected');
+  }
+  // Hook up add to cart button
+  const addBtn = document.getElementById('add-to-cart-btn');
+  if (addBtn) {
+    addBtn.onclick = function() {
+      addToCart(product.name, product.price);
+      // Provide some visual feedback
+      addBtn.textContent = 'Adicionado!';
+      setTimeout(() => { addBtn.textContent = 'Adicionar ao Carrinho'; }, 2000);
+    };
+  }
+}
+
+/*
+ * ======================================================================
+ *  EMBEDDED ADMIN PANEL FOR PRODUCT MANAGEMENT
+ *
+ *  This self-invoking function provides a simple admin interface
+ *  entirely on the client side. Products are stored in localStorage
+ *  under the key kgc_products_v1 and broadcast to other tabs via a
+ *  BroadcastChannel. The admin UI allows logging in with a code,
+ *  adding/editing/removing products, uploading images (converted to
+ *  PNG and scaled), and exporting/importing the JSON.  The store grid
+ *  is re-rendered in real time on changes.
+ */
+
+(function(){
+  // Configuration constants. Adjust these values at the top of the
+  // script to change the admin code or image limits.
+  const ADMIN_CODE = 'kgcadmin';
+  const LS_KEY = 'kgc_products_v1';
+  const BC_NAME = 'kgc-products-chan';
+  const MAX_IMAGES_PER_PRODUCT = 8;
+  const MAX_SIDE_PX = 1600;
+  const MAX_DATAURL_LEN = 2500000; // approx 2.5MB
+
+  // Broadcast channel for realtime updates
+  const chan = ('BroadcastChannel' in window) ? new BroadcastChannel(BC_NAME) : null;
+
+  // State object containing list of products and temporary form images
+  let state = { items: [], __formImages: [] };
+  let isAdmin = false;
+
+  // Helpers to read/write JSON from localStorage safely
+  function readState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      const obj = raw ? JSON.parse(raw) : null;
+      if (obj && Array.isArray(obj.items)) {
+        state.items = obj.items;
+      }
+    } catch {
+      state.items = [];
+    }
+  }
+  function saveState(broadcast = true) {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ items: state.items }));
+      if (broadcast && chan) chan.postMessage({ type:'refresh' });
+    } catch {}
+  }
+
+  // Re-render the store grid after state changes.  If a global
+  // renderStore() function exists (from this script), call it;
+  // otherwise build a basic grid.
+  function rebuildStoreGrid() {
+    const items = state.items.filter(p => p.active !== false);
+    if (typeof window.renderStore === 'function') {
+      window.renderStore(items);
+    } else {
+      const storeEl = document.getElementById('store');
+      if (!storeEl) return;
+      storeEl.innerHTML = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'product';
+        const imgSrc = (item.images && item.images.length > 0) ? item.images[0] : '';
+        card.innerHTML = `
+          <a href="product.html?slug=${encodeURIComponent(item.slug)}">
+            <img src="${imgSrc}" alt="${item.name}">
+          </a>
+          <p>${item.name} - R$${Number(item.price).toFixed(2)}</p>
+          <button onclick="addToCart('${item.name}', ${Number(item.price)})">Adicionar ao Carrinho</button>
+          <a href="product.html?slug=${encodeURIComponent(item.slug)}"><button>Comprar</button></a>
+        `;
+        storeEl.appendChild(card);
+      });
+    }
+    // update cart count if available
+    if (typeof window.updateCartCount === 'function') window.updateCartCount();
+  }
+
+  // Broadcast channel listener
+  if (chan) {
+    chan.onmessage = (ev) => {
+      if (ev.data && ev.data.type === 'refresh') {
+        readState();
+        rebuildStoreGrid();
+        renderAdminList();
+      }
+    };
+  }
+  window.addEventListener('storage', (ev) => {
+    if (ev.key === LS_KEY) {
+      readState();
+      rebuildStoreGrid();
+      renderAdminList();
+    }
+  });
+
+  // Utility: generate a UUID fallback if crypto.randomUUID not available
+  function uuid() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
+  // File reader: convert an uploaded image to a PNG data URL,
+  // resizing down to MAX_SIDE_PX if necessary.
+  async function fileToPngDataURL(file) {
+    const bitmap = await createImageBitmap(file);
+    let { width, height } = bitmap;
+    if (Math.max(width, height) > MAX_SIDE_PX) {
+      const scale = MAX_SIDE_PX / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    let dataUrl = canvas.toDataURL('image/png');
+    // ensure data URL isn't too large; downscale further if needed
+    if (dataUrl.length > MAX_DATAURL_LEN) {
+      const factor = 0.8;
+      const c2 = document.createElement('canvas');
+      c2.width = Math.round(width * factor);
+      c2.height = Math.round(height * factor);
+      c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
+      dataUrl = c2.toDataURL('image/png');
+    }
+    return dataUrl;
+  }
+
+  // Create the admin UI elements if they are not already present
+  function createAdminUI() {
+    // Admin toggle button
+    if (!document.getElementById('kgc-admin-toggle')) {
+      const btn = document.createElement('button');
+      btn.id = 'kgc-admin-toggle';
+      btn.textContent = 'ADMIN';
+      btn.title = 'Abrir admin (Ctrl+Shift+A)';
+      btn.setAttribute('data-admin','true');
+      btn.onclick = () => { openAdminPanel(); };
+      document.body.appendChild(btn);
+    }
+    // Admin panel overlay
+    if (!document.getElementById('kgc-admin-panel')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'kgc-admin-panel';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.style.display = 'none';
+      // sheet container
+      const sheet = document.createElement('div');
+      sheet.id = 'kgc-admin-sheet';
+      sheet.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3>Admin KGC</h3>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-dark" id="kgc-export">Exportar JSON</button>
+            <label class="btn-dark" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+              Importar JSON
+              <input type="file" id="kgc-import" accept="application/json" style="display:none;">
+            </label>
+            <button class="btn-dark" id="kgc-admin-close">Fechar</button>
+          </div>
+        </div>
+        <div id="kgc-login-box" style="margin:10px 0 14px; border:1px dashed #444; padding:10px; border-radius:8px;">
+          <label>Código de administrador</label>
+          <div class="row">
+            <input type="text" id="kgc-pass" placeholder="Digite seu código">
+            <button class="btn-gold" id="kgc-do-login">Entrar</button>
+          </div>
+          <small>Dica: edite o código no script (const ADMIN_CODE).</small>
+        </div>
+        <form id="kgc-form" style="display:none;">
+          <input type="hidden" id="kgc-f-id">
+          <label>Nome do produto</label>
+          <input type="text" id="kgc-f-name" required>
+          <div class="row">
+            <div>
+              <label>Slug (URL)</label>
+              <input type="text" id="kgc-f-slug" required>
+            </div>
+            <div>
+              <label>Ativo?</label>
+              <input type="checkbox" id="kgc-f-active" checked>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Preço (R$)</label>
+              <input type="number" id="kgc-f-price" step="0.01" min="0" required>
+            </div>
+            <div>
+              <label>Preço original (R$)</label>
+              <input type="number" id="kgc-f-original" step="0.01" min="0">
+            </div>
+          </div>
+          <label>Descrição</label>
+          <textarea id="kgc-f-desc" rows="3"></textarea>
+          <div class="row">
+            <div>
+              <label>Cores (separe por vírgula)</label>
+              <input type="text" id="kgc-f-colors" placeholder="preto, branco">
+            </div>
+            <div>
+              <label>Tamanhos (separe por vírgula)</label>
+              <input type="text" id="kgc-f-sizes" placeholder="P,M,G,GG,G1,G2,G3">
+            </div>
+          </div>
+          <label>Imagens do produto</label>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+            <input type="file" id="kgc-f-image-files" accept="image/png,image/jpeg,image/webp" multiple>
+            <button type="button" class="btn-dark" id="kgc-img-add-url">+ Adicionar por URL</button>
+            <small>PNG recomendado. Máx. ${MAX_IMAGES_PER_PRODUCT} imagens.</small>
+          </div>
+          <div id="kgc-f-image-grid" class="kgc-img-grid"></div>
+          <div class="actions">
+            <button type="submit" class="btn-gold" id="kgc-f-save">Salvar</button>
+            <button type="button" class="btn-dark" id="kgc-f-new">Novo</button>
+            <button type="button" class="btn-dark" id="kgc-f-delete">Excluir</button>
+          </div>
+        </form>
+        <div class="kgc-list" id="kgc-list"></div>
+      `;
+      overlay.appendChild(sheet);
+      document.body.appendChild(overlay);
+    }
+    // Bind global keypress for Ctrl+Shift+A to open admin
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+        openAdminPanel();
+      }
+    });
+    // If previously logged in, show the form automatically
+    if (localStorage.getItem('kgc_admin_on') === '1') {
+      isAdmin = true;
+    }
+  }
+
+  // Show admin panel overlay
+  function openAdminPanel() {
+    createAdminUI();
+    const panel = document.getElementById('kgc-admin-panel');
+    if (panel) panel.style.display = 'block';
+    // Fill lists if already admin
+    if (isAdmin) {
+      document.body.classList.add('is-admin');
+      document.getElementById('kgc-login-box').style.display = 'none';
+      document.getElementById('kgc-form').style.display = 'block';
+      renderAdminList();
+    }
+  }
+
+  // Close admin panel
+  function closeAdminPanel() {
+    const panel = document.getElementById('kgc-admin-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  // Initialize image controls within the form
+  function initImageControls() {
+    const fileInput = document.getElementById('kgc-f-image-files');
+    const addUrlBtn = document.getElementById('kgc-img-add-url');
+    const grid = document.getElementById('kgc-f-image-grid');
+    // Render grid with current images
+    function renderImages() {
+      grid.innerHTML = '';
+      state.__formImages.forEach((src, idx) => {
+        const div = document.createElement('div');
+        div.className = 'kgc-img';
+        div.innerHTML = `
+          ${idx === 0 ? '<span class="kgc-chip">CAPA</span>' : ''}
+          <img src="${src}">
+          <div class="tools">
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="kgc-btn-mini" data-up="${idx}">▲</button>
+              <button type="button" class="kgc-btn-mini" data-down="${idx}">▼</button>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="kgc-btn-mini" data-cap="${idx}">⭐</button>
+              <button type="button" class="kgc-btn-mini" data-del="${idx}">🗑️</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+      // attach events
+      grid.querySelectorAll('button[data-up]').forEach(btn => {
+        btn.onclick = () => {
+          const i = parseInt(btn.getAttribute('data-up'), 10);
+          if (i > 0) {
+            [state.__formImages[i], state.__formImages[i-1]] = [state.__formImages[i-1], state.__formImages[i]];
+            renderImages();
+          }
+        };
+      });
+      grid.querySelectorAll('button[data-down]').forEach(btn => {
+        btn.onclick = () => {
+          const i = parseInt(btn.getAttribute('data-down'), 10);
+          if (i < state.__formImages.length - 1) {
+            [state.__formImages[i], state.__formImages[i+1]] = [state.__formImages[i+1], state.__formImages[i]];
+            renderImages();
+          }
+        };
+      });
+      grid.querySelectorAll('button[data-cap]').forEach(btn => {
+        btn.onclick = () => {
+          const i = parseInt(btn.getAttribute('data-cap'), 10);
+          const [img] = state.__formImages.splice(i, 1);
+          state.__formImages.unshift(img);
+          renderImages();
+        };
+      });
+      grid.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.onclick = () => {
+          const i = parseInt(btn.getAttribute('data-del'), 10);
+          state.__formImages.splice(i, 1);
+          renderImages();
+        };
+      });
+    }
+    // Image file upload
+    if (fileInput) {
+      fileInput.onchange = async (ev) => {
+        const files = Array.from(ev.target.files || []);
+        for (const file of files) {
+          if (state.__formImages.length >= MAX_IMAGES_PER_PRODUCT) {
+            alert('Limite de imagens atingido.');
+            break;
+          }
+          const dataUrl = await fileToPngDataURL(file);
+          state.__formImages.push(dataUrl);
+        }
+        renderImages();
+        fileInput.value = '';
+      };
+    }
+    // Add via URL
+    if (addUrlBtn) {
+      addUrlBtn.onclick = () => {
+        const url = prompt('Cole a URL da imagem (.png/.jpg/.webp):');
+        if (!url) return;
+        if (state.__formImages.length >= MAX_IMAGES_PER_PRODUCT) {
+          alert('Limite de imagens atingido.');
+          return;
+        }
+        state.__formImages.push(url.trim());
+        renderImages();
+      };
+    }
+    // Expose function for external resets
+    state.renderImages = renderImages;
+  }
+
+  // Clear form for new product
+  function clearForm() {
+    document.getElementById('kgc-f-id').value = '';
+    document.getElementById('kgc-f-name').value = '';
+    document.getElementById('kgc-f-slug').value = '';
+    document.getElementById('kgc-f-active').checked = true;
+    document.getElementById('kgc-f-price').value = '';
+    document.getElementById('kgc-f-original').value = '';
+    document.getElementById('kgc-f-desc').value = '';
+    document.getElementById('kgc-f-colors').value = '';
+    document.getElementById('kgc-f-sizes').value = '';
+    state.__formImages = [];
+    if (state.renderImages) state.renderImages();
+  }
+
+  // Fill form with product data for editing
+  function fillForm(product) {
+    document.getElementById('kgc-f-id').value = product.id || '';
+    document.getElementById('kgc-f-name').value = product.name || '';
+    document.getElementById('kgc-f-slug').value = product.slug || '';
+    document.getElementById('kgc-f-active').checked = product.active !== false;
+    document.getElementById('kgc-f-price').value = product.price ?? '';
+    document.getElementById('kgc-f-original').value = product.original_price ?? '';
+    document.getElementById('kgc-f-desc').value = product.description || '';
+    document.getElementById('kgc-f-colors').value = (product.colors || []).join(', ');
+    document.getElementById('kgc-f-sizes').value = (product.sizes || []).join(', ');
+    state.__formImages = (product.images || []).slice(0, MAX_IMAGES_PER_PRODUCT);
+    if (state.renderImages) state.renderImages();
+  }
+
+  // Render the admin product list
+  function renderAdminList() {
+    if (!isAdmin) return;
+    const listEl = document.getElementById('kgc-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    // sort descending by created_at
+    const items = state.items.slice().sort((a,b) => {
+      return (b.created_at || '').localeCompare(a.created_at || '');
+    });
+    items.forEach(item => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'kgc-item';
+      const imgSrc = (item.images && item.images.length) ? item.images[0] : '';
+      wrapper.innerHTML = `
+        <img src="${imgSrc}" alt="">
+        <div class="meta">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <strong>${item.name}</strong> ${item.active===false?'<span class="kgc-badge">inativo</span>':''}
+          </div>
+          <div>Slug: <code>${item.slug}</code></div>
+          <div>Preço: R$${Number(item.price).toFixed(2)} ${item.original_price?`<small>(de R$${Number(item.original_price).toFixed(2)})</small>`:''}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-dark" data-edit="${item.id}">Editar</button>
+          <button class="btn-dark" data-del="${item.id}">Excluir</button>
+        </div>
+      `;
+      listEl.appendChild(wrapper);
+    });
+    // attach edit/delete
+    listEl.querySelectorAll('button[data-edit]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-edit');
+        const p = state.items.find(x => x.id === id);
+        if (p) fillForm(p);
+      };
+    });
+    listEl.querySelectorAll('button[data-del]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-del');
+        if (confirm('Excluir este produto?')) {
+          state.items = state.items.filter(x => x.id !== id);
+          saveState();
+          rebuildStoreGrid();
+          renderAdminList();
+          clearForm();
+        }
+      };
+    });
+  }
+
+  // Setup event listeners for admin UI
+  function bindAdminEvents() {
+    // Close button
+    document.getElementById('kgc-admin-close').onclick = () => { closeAdminPanel(); };
+    // Login button
+    document.getElementById('kgc-do-login').onclick = () => {
+      const code = document.getElementById('kgc-pass').value.trim();
+      if (code === ADMIN_CODE) {
+        isAdmin = true;
+        localStorage.setItem('kgc_admin_on', '1');
+        document.body.classList.add('is-admin');
+        document.getElementById('kgc-login-box').style.display = 'none';
+        document.getElementById('kgc-form').style.display = 'block';
+        renderAdminList();
+      } else {
+        alert('Código inválido');
+      }
+    };
+    // New button
+    document.getElementById('kgc-f-new').onclick = () => {
+      clearForm();
+    };
+    // Save button
+    document.getElementById('kgc-form').onsubmit = (ev) => {
+      ev.preventDefault();
+      const now = new Date().toISOString();
+      const id = document.getElementById('kgc-f-id').value || uuid();
+      const product = {
+        id,
+        name: document.getElementById('kgc-f-name').value.trim(),
+        slug: document.getElementById('kgc-f-slug').value.trim(),
+        active: document.getElementById('kgc-f-active').checked,
+        price: Number(document.getElementById('kgc-f-price').value || 0),
+        original_price: document.getElementById('kgc-f-original').value ? Number(document.getElementById('kgc-f-original').value) : null,
+        description: document.getElementById('kgc-f-desc').value.trim(),
+        colors: document.getElementById('kgc-f-colors').value ? document.getElementById('kgc-f-colors').value.split(',').map(s => s.trim()).filter(Boolean) : [],
+        sizes: document.getElementById('kgc-f-sizes').value ? document.getElementById('kgc-f-sizes').value.split(',').map(s => s.trim()).filter(Boolean) : [],
+        images: state.__formImages.slice(0, MAX_IMAGES_PER_PRODUCT),
+        created_at: document.getElementById('kgc-f-id').value ? (state.items.find(x => x.id === id)?.created_at || now) : now
+      };
+      const idx = state.items.findIndex(x => x.id === id);
+      if (idx >= 0) {
+        state.items[idx] = product;
+      } else {
+        state.items.unshift(product);
+      }
+      saveState();
+      rebuildStoreGrid();
+      renderAdminList();
+      fillForm(product);
+      alert('Produto salvo');
+    };
+    // Delete button
+    document.getElementById('kgc-f-delete').onclick = () => {
+      const id = document.getElementById('kgc-f-id').value;
+      if (!id) {
+        alert('Nenhum produto selecionado.');
+        return;
+      }
+      if (confirm('Excluir este produto?')) {
+        state.items = state.items.filter(x => x.id !== id);
+        saveState();
+        rebuildStoreGrid();
+        renderAdminList();
+        clearForm();
+      }
+    };
+    // Export JSON
+    document.getElementById('kgc-export').onclick = () => {
+      const blob = new Blob([JSON.stringify({ items: state.items }, null, 2)], { type:'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'kgc-products.json';
+      a.click();
+    };
+    // Import JSON
+    document.getElementById('kgc-import').onchange = async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const obj = JSON.parse(text);
+        if (obj && Array.isArray(obj.items)) {
+          state.items = obj.items;
+          saveState();
+          rebuildStoreGrid();
+          renderAdminList();
+          clearForm();
+        } else {
+          alert('JSON inválido.');
+        }
+      } catch {
+        alert('Falha ao importar JSON.');
+      }
+      ev.target.value = '';
+    };
+  }
+
+  // Initialize admin panel after DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    readState();
+    createAdminUI();
+    initImageControls();
+    rebuildStoreGrid();
+    if (isAdmin) {
+      document.body.classList.add('is-admin');
+      document.getElementById('kgc-login-box').style.display = 'none';
+      document.getElementById('kgc-form').style.display = 'block';
+    }
+    bindAdminEvents();
+    renderAdminList();
+  });
+})();
+
+/**
+ * Update the small cart counter displayed on the floating cart icon.
+ */
+function updateCartCount() {
+  const countSpan = document.querySelector('#cart-icon .cart-count');
+  if (countSpan) {
+    countSpan.textContent = cart.length;
+  }
+}
+
+/**
+ * Toggle the visibility of the cart overlay and refresh its contents.
+ */
+function toggleCart() {
+  const overlay = document.getElementById('cart-overlay');
+  if (!overlay) return;
+  // If currently hidden, update the overlay before showing
+  if (overlay.classList.contains('hidden')) {
+    updateCartOverlay();
+  }
+  overlay.classList.toggle('hidden');
+}
+
+/**
+ * Populate the cart overlay with the current cart contents and total.
+ */
+function updateCartOverlay() {
+  const listEl = document.getElementById('cart-items');
+  const totalEl = document.getElementById('cart-total');
+  if (!listEl || !totalEl) return;
+  listEl.innerHTML = '';
+  let total = 0;
+  cart.forEach((item, index) => {
+    total += item.price;
+    const li = document.createElement('li');
+    li.textContent = `${item.product} - R$${item.price.toFixed(2)}`;
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Remover';
+    removeBtn.onclick = () => {
+      removeFromCart(index);
+      updateCartOverlay();
+      updateCartCount();
+    };
+    li.appendChild(removeBtn);
+    listEl.appendChild(li);
+  });
+  totalEl.textContent = `Total: R$${total.toFixed(2)}`;
+}
+
+/**
+ * Navigate to the checkout page.
+ */
+function goToCheckout() {
+  window.location.href = 'checkout.html';
+}
+
+// When the page loads, if there is a cart element present we need to
+// render its contents. This ensures that the cart persists when the
+// user navigates back from a product detail page.
+document.addEventListener('DOMContentLoaded', () => {
+  updateCart();
+  updateCartCount();
+  // Attach click sound to interactive elements once the page is loaded.
+  attachRetroClickSounds();
+  // Set a gentle volume on background music if present.  Without
+  // user interaction some browsers may prevent playback; the volume
+  // adjustment happens after DOM is ready.
+  const bgMusic = document.getElementById('bg-music');
+  if (bgMusic) {
+    bgMusic.volume = 0.2;
+  }
+});
+
+// After the standard DOMContentLoaded handler sets up cart and sounds, we
+// perform dynamic content rendering.  If the current page contains a
+// #store element we load products from localStorage (or fallback) and
+// render the store grid.  If it contains the product detail image, we
+// load the product dynamically based on the slug or id.  In both
+// cases we update the cart count once rendering is complete.
+document.addEventListener('DOMContentLoaded', () => {
+  const storeEl = document.getElementById('store');
+  if (storeEl) {
+    loadProductsDynamic().then(items => {
+      renderStore(items);
+      updateCartCount();
+    });
+  }
+  const productImageEl = document.getElementById('product-image');
+  if (productImageEl) {
+    loadProductDynamic().then(() => {
+      updateCartCount();
+    });
+  }
+});
+
+/**
+ * Generate a short retro click sound using the Web Audio API.  We use a
+ * square wave with a brief duration to emulate the bleeps of vintage
+ * game consoles.  This function is called when interactive elements
+ * are clicked.  The audio context is created once and reused for
+ * subsequent clicks.
+ */
+const clickSoundContext = new (window.AudioContext || window.webkitAudioContext)();
+function playClickSound() {
+  try {
+    const oscillator = clickSoundContext.createOscillator();
+    const gainNode = clickSoundContext.createGain();
+    oscillator.type = 'square';
+    // Set frequency for a pleasant click; adjust as needed
+    oscillator.frequency.setValueAtTime(600, clickSoundContext.currentTime);
+    // Envelope: quick fade out to avoid clicks
+    gainNode.gain.setValueAtTime(0.2, clickSoundContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, clickSoundContext.currentTime + 0.05);
+    oscillator.connect(gainNode);
+    gainNode.connect(clickSoundContext.destination);
+    oscillator.start();
+    oscillator.stop(clickSoundContext.currentTime + 0.05);
+  } catch (e) {
+    // Some browsers may block AudioContext before user interaction; ignore errors
+  }
+}
+
+/**
+ * Attach the retro click sound to all buttons, menu tiles and the cart icon.
+ * This function queries the DOM for common interactive elements and adds
+ * a click handler that triggers the retro click sound.  It is safe to
+ * call multiple times; event listeners will not accumulate due to
+ * capturing phases (the same function reference is used).
+ */
+function attachRetroClickSounds() {
+  const interactiveSelectors = ['button', '.menu-tile', '#cart-icon', 'a'];
+  interactiveSelectors.forEach(selector => {
+    document.querySelectorAll(selector).forEach(el => {
+      // Only attach if not already attached
+      el.addEventListener('click', playClickSound);
+    });
+  });
+}
+
+/*
+ * ======================================================================
+ *  GATE OVERLAY & LEAD CAPTURE
+ *
+ *  This IIFE injects an overlay that appears the first time the user
+ *  visits the site (or if the unlock period has expired). It collects
+ *  the visitor's name, phone and email, stores the lead in
+ *  localStorage, generates a one‑time password and reveals a second
+ *  stage where the user enters that password. On successful entry the
+ *  overlay is removed and a timestamp is saved so the gate isn't
+ *  displayed again for 30 days. An admin CSV export can be triggered
+ *  via Ctrl+Shift+E.
+ */
+//
+// === Gate overlay disabled ===
+//
+// The original implementation injected a lead capture "gate" overlay that
+// prompted visitors to submit their name, phone and email before
+// accessing the site. This behaviour is no longer desired for the
+// production version of the site. To disable the gate completely we
+// short‑circuit the immediately invoked function expression (IIFE)
+// defined below. When this function returns immediately nothing
+// related to the gate is executed and the overlay is never created.
+(function() {
+  // Bail out early to disable the lead capture gate
+  return;
+
+  const ADMIN_CODE = 'kgcadmin';
+  const PASS_LEN   = 6;
+  const UNLOCK_DAYS = 30;
+  const LEADS_KEY  = 'kgc_leads_v1';
+  const PASS_MAP   = 'kgc_pass_by_email';
+  const UNLOCK_KEY = 'kgc_unlocked_until';
+  function readLS(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function writeLS(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch {}
+  }
+  function randPass(n) {
+    return Array.from(crypto.getRandomValues(new Uint8Array(n)))
+      .map(x => (x % 10)).join('');
+  }
+  function phoneFmt(v) {
+    return v.replace(/\D/g,'').replace(/^([0-9]{0,2})([0-9]{0,5})([0-9]{0,4}).*$/, (m,a,b,c) => {
+      const parts = [];
+      if (a) parts.push('(' + a);
+      if (a) parts.push(') ');
+      if (b) parts.push(b);
+      if (c) parts.push('-' + c);
+      return parts.join('');
+    });
+  }
+  function emailOk(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+  // Check if already unlocked
+  const unlockedUntil = parseInt(localStorage.getItem(UNLOCK_KEY) || '0', 10);
+  if (Date.now() < unlockedUntil) {
+    return;
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    // Do not insert the gate if it already exists
+    if (document.getElementById('kgc-gate')) return;
+    const gate = document.createElement('div');
+    gate.id = 'kgc-gate';
+    gate.className = 'open';
+    gate.innerHTML = `
+      <div class="wrap">
+        <div class="card">
+          <div class="brand" data-logo></div>
+          <h1>Sei que você tá curioso pra ver a loja — estamos lapidando do nosso jeito.</h1>
+          <p class="sub">Deixa seus dados e destrava o acesso exclusivo.</p>
+          <form id="lead-form" autocomplete="on" novalidate>
+            <div class="kgc-field">
+              <label class="kgc-label" for="kgc-lead-name">Nome</label>
+              <input class="kgc-input" id="kgc-lead-name" name="name" placeholder="Seu nome" required>
+            </div>
+            <div class="row">
+              <div class="kgc-field">
+                <label class="kgc-label" for="kgc-lead-phone">Telefone</label>
+                <input class="kgc-input" id="kgc-lead-phone" name="phone" inputmode="tel" placeholder="(11) 9 9999-9999" required>
+              </div>
+              <div class="kgc-field">
+                <label class="kgc-label" for="kgc-lead-email">E‑mail</label>
+                <input class="kgc-input" id="kgc-lead-email" type="email" name="email" placeholder="voce@exemplo.com" required>
+              </div>
+            </div>
+            <button type="submit" class="btn" id="kgc-btn-get-pass">QUERO A SENHA</button>
+            <div id="kgc-lead-error" class="err" style="display:none;"></div>
+          </form>
+          <div id="kgc-pwd-box" class="pwd-box">
+            <div class="kgc-field">
+              <label class="kgc-label" for="kgc-lead-pass">Senha de acesso</label>
+              <div class="pwd-row">
+                <input class="kgc-input" id="kgc-lead-pass" type="password" placeholder="Digite a senha" disabled required>
+                <button class="eye" id="kgc-toggle-eye" aria-label="Mostrar senha">👁️</button>
+              </div>
+              <div class="hint" id="kgc-pwd-hint"></div>
+            </div>
+            <button class="btn" id="kgc-btn-unlock">DESTRAVAR</button>
+          </div>
+          <div class="hint" style="margin-top:12px">Dica: salve seu e‑mail; o acesso fica liberado por 30 dias neste dispositivo.</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(gate);
+    // Admin prompt for CSV export
+    if (!document.getElementById('kgc-admin-prompt')) {
+      const adminPrompt = document.createElement('div');
+      adminPrompt.id = 'kgc-admin-prompt';
+      adminPrompt.innerHTML = `
+        <div class="box">
+          <div style="font-family:'Press Start 2P', monospace; color:#f5c542; margin-bottom:6px;">Exportar Leads</div>
+          <div>Digite o código de admin para gerar o CSV:</div>
+          <input class="kgc-input" id="kgc-admin-code" placeholder="código admin">
+          <button class="btn" id="kgc-admin-ok" style="margin-top:10px;">GERAR CSV</button>
+        </div>
+      `;
+      document.body.appendChild(adminPrompt);
+    }
+    // Hook up form elements
+    const nameI  = document.getElementById('kgc-lead-name');
+    const phoneI = document.getElementById('kgc-lead-phone');
+    const emailI = document.getElementById('kgc-lead-email');
+    const passI  = document.getElementById('kgc-lead-pass');
+    const errBox = document.getElementById('kgc-lead-error');
+    const pwdBox = document.getElementById('kgc-pwd-box');
+    const pwdHint= document.getElementById('kgc-pwd-hint');
+    const eyeBtn = document.getElementById('kgc-toggle-eye');
+    const leadForm = document.getElementById('lead-form');
+    phoneI.addEventListener('input', () => {
+      phoneI.value = phoneFmt(phoneI.value);
+    });
+    leadForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      errBox.style.display = 'none';
+      const name = nameI.value.trim();
+      const email = emailI.value.trim().toLowerCase();
+      const phone = phoneI.value.trim();
+      if (!name || !emailOk(email) || phone.replace(/\D/g,'').length < 10) {
+        errBox.textContent = 'Preencha nome, telefone e e‑mail válidos.';
+        errBox.style.display = 'block';
+        return;
+      }
+      // Save lead
+      const leads = readLS(LEADS_KEY, []);
+      const params = new URLSearchParams(window.location.search);
+      const lead = {
+        id: (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).slice(2),
+        name,
+        email,
+        phone,
+        utm_source: params.get('utm_source') || '',
+        utm_medium: params.get('utm_medium') || '',
+        utm_campaign: params.get('utm_campaign') || '',
+        referrer: document.referrer || '',
+        user_agent: navigator.userAgent,
+        ts: new Date().toISOString()
+      };
+      leads.push(lead);
+      writeLS(LEADS_KEY, leads);
+      // Generate pass for email
+      const map = readLS(PASS_MAP, {});
+      const pass = randPass(PASS_LEN);
+      map[email] = pass;
+      writeLS(PASS_MAP, map);
+      // Show password section
+      document.getElementById('kgc-btn-get-pass').disabled = true;
+      passI.disabled = false;
+      pwdBox.style.display = 'block';
+      passI.value = pass;
+      pwdHint.textContent = `Sua senha: ${pass} (copiada para o campo).`;
+      setTimeout(() => {
+        document.getElementById('kgc-btn-unlock').focus();
+      }, 0);
+    });
+    eyeBtn.addEventListener('click', () => {
+      passI.type = passI.type === 'password' ? 'text' : 'password';
+    });
+    document.getElementById('kgc-btn-unlock').addEventListener('click', () => {
+      const email = emailI.value.trim().toLowerCase();
+      const typed = passI.value.trim();
+      const map = readLS(PASS_MAP, {});
+      if (!typed || map[email] !== typed) {
+        pwdHint.textContent = 'Senha incorreta. Confira seu código.';
+        return;
+      }
+      // Unlock
+      const expires = Date.now() + UNLOCK_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(UNLOCK_KEY, String(expires));
+      gate.classList.remove('open');
+      gate.style.display = 'none';
+      // Play music if available
+      const bg = document.getElementById('bg-music');
+      if (bg) {
+        try {
+          bg.volume = 0.2;
+          bg.play();
+        } catch {}
+      }
+    });
+    // CSV export via Ctrl+Shift+E
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+        const promptEl = document.getElementById('kgc-admin-prompt');
+        if (promptEl) {
+          promptEl.style.display = 'flex';
+          document.getElementById('kgc-admin-code').focus();
+        }
+      }
+    });
+    document.getElementById('kgc-admin-ok').addEventListener('click', () => {
+      const code = document.getElementById('kgc-admin-code').value.trim();
+      if (code !== ADMIN_CODE) {
+        alert('Código inválido');
+        return;
+      }
+      const leads = readLS(LEADS_KEY, []);
+      const header = ['id','name','email','phone','utm_source','utm_medium','utm_campaign','referrer','user_agent','ts'];
+      const rows = [header.join(',')].concat(leads.map(l => header.map(h => {
+        const v = (l[h] ?? '').toString().replace(/"/g,'""');
+        return `"${v}"`;
+      }).join(',')));
+      const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kgc-leads-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      document.getElementById('kgc-admin-prompt').style.display = 'none';
+    });
+  });
+})();
+
+/*
+ * ======================================================================
+ *  UNIVERSAL LOGO REPLACEMENT
+ *
+ *  Replace any element with the classes .brand, .logo, .logo-text or
+ *  attribute [data-logo] with an <img> tag pointing to the animated
+ *  logo GIF.  For hero occurrences (e.g. main headings) we also add
+ *  the .kgc-logo-hero class to scale the image.
+ */
+(function() {
+  const LOGO_URL = 'assets/logo.gif';
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.brand, .logo, .logo-text, [data-logo]').forEach(el => {
+      const isHero = el.classList.contains('brand') || el.classList.contains('logo');
+      if (el.tagName === 'IMG') {
+        el.src = LOGO_URL;
+        el.classList.add('kgc-logo');
+        if (isHero) el.classList.add('kgc-logo-hero');
+      } else {
+        el.innerHTML = `<img src="${LOGO_URL}" alt="KGC" class="kgc-logo${isHero ? ' kgc-logo-hero' : ''}">`;
+      }
+    });
+  });
+})();
+
+/*
+ * ======================================================================
+ *  DYNAMIC PRODUCT LOADER
+ *
+ *  Functions to load product lists from localStorage (kgc_products_v1) and
+ *  render the store grid, as well as load individual products by slug
+ *  or id. These functions fall back to the global products array
+ *  defined in products.js when no products exist in storage.
+ */
+async function loadProductsDynamic() {
+  let items = [];
+  try {
+    const raw = localStorage.getItem('kgc_products_v1');
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && Array.isArray(obj.items)) {
+        items = obj.items;
+      }
+    }
+  } catch {}
+  if ((!items || items.length === 0) && typeof products !== 'undefined') {
+    items = products.map(p => {
+      return {
+        id: p.id,
+        slug: p.slug || (p.name ? p.name.toLowerCase().replace(/\s+/g,'-') : String(p.id)),
+        name: p.name,
+        price: p.price,
+        original_price: p.originalPrice || null,
+        description: p.description || '',
+        images: [p.image],
+        colors: p.colors || [],
+        sizes: p.sizes || [],
+        active: true,
+        created_at: new Date().toISOString()
+      };
+    });
+  }
+  return items.filter(item => item.active !== false);
+}
+
+function renderStore(items) {
+  const storeEl = document.getElementById('store');
+  if (!storeEl) return;
+  storeEl.innerHTML = '';
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'product';
+    const imgSrc = (item.images && item.images.length > 0) ? item.images[0] : '';
+    card.innerHTML = `
+      <a href="product.html?slug=${encodeURIComponent(item.slug)}">
+        <img src="${imgSrc}" alt="${item.name}">
+      </a>
+      <p>${item.name} - R$${Number(item.price).toFixed(2)}</p>
+      <button onclick="addToCart('${item.name}', ${Number(item.price)})">Adicionar ao Carrinho</button>
+      <a href="product.html?slug=${encodeURIComponent(item.slug)}"><button>Comprar</button></a>
+    `;
+    storeEl.appendChild(card);
+  });
+}
+
+async function loadProductDynamic() {
+  const params = getQueryParams();
+  let slug = params.slug || null;
+  const idParam = params.id || null;
+  const items = await loadProductsDynamic();
+  let product = null;
+  if (slug) {
+    product = items.find(p => p.slug === slug);
+  }
+  if (!product && idParam) {
+    const idInt = parseInt(idParam, 10);
+    product = items.find(p => p.id === idInt);
+  }
+  if (!product) {
+    if (typeof products !== 'undefined') {
+      if (slug) {
+        product = products.find(p => p.slug === slug);
+      }
+      if (!product && idParam) {
+        const id = parseInt(idParam, 10);
+        product = products.find(p => p.id === id);
+      }
+    }
+  }
+  if (!product) {
+    window.location.href = 'loja.html';
+    return;
+  }
+  const imageEl = document.getElementById('product-image');
+  const nameEl  = document.getElementById('product-name');
+  const descEl  = document.getElementById('product-description');
+  const priceEl = document.getElementById('product-price');
+  const originalPriceEl = document.getElementById('product-original-price');
+  const discountBadgeEl = document.getElementById('product-discount-badge');
+  const paymentInfoEl   = document.getElementById('payment-info');
+  if (imageEl) {
+    imageEl.src = (product.images && product.images.length) ? product.images[0] : '';
+    imageEl.alt = product.name;
+  }
+  if (nameEl) nameEl.textContent = product.name;
+  if (descEl) descEl.textContent = product.description || '';
+  if (priceEl) priceEl.textContent = `R$${Number(product.price).toFixed(2)}`;
+  if (originalPriceEl) {
+    if (product.original_price && Number(product.original_price) > 0) {
+      originalPriceEl.textContent = `R$${Number(product.original_price).toFixed(2)}`;
+    } else {
+      originalPriceEl.textContent = '';
+    }
+  }
+  if (discountBadgeEl) {
+    if (product.original_price && Number(product.original_price) > 0) {
+      const discount = 1 - (product.price / product.original_price);
+      discountBadgeEl.textContent = `-${Math.round(discount * 100)}%`;
+    } else {
+      discountBadgeEl.textContent = '';
+    }
+  }
+  if (paymentInfoEl) {
+    const parcela = (Number(product.price) / 10).toFixed(2);
+    paymentInfoEl.textContent = `ou em até 10x de R$${parcela} sem juros`;
+  }
+  const shippingEl = document.getElementById('shipping-info');
+  if (shippingEl) {
+    const now = new Date();
+    const deliveryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const day   = String(deliveryDate.getDate()).padStart(2, '0');
+    const month = String(deliveryDate.getMonth() + 1).padStart(2, '0');
+    const year  = deliveryDate.getFullYear();
+    shippingEl.textContent = `Receba até ${day}/${month}/${year} • Frete grátis para todo o Brasil`;
+  }
+  const colorContainer = document.getElementById('color-options');
+  if (colorContainer) {
+    colorContainer.innerHTML = '';
+    if (product.colors && product.colors.length) {
+      product.colors.forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.classList.add('color-swatch');
+        swatch.style.background = color;
+        swatch.title = color;
+        swatch.onclick = () => {
+          colorContainer.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+          swatch.classList.add('selected');
+        };
+        colorContainer.appendChild(swatch);
+      });
+      const first = colorContainer.querySelector('.color-swatch');
+      if (first) first.classList.add('selected');
+    }
+  }
+  const sizeContainer = document.getElementById('size-options');
+  if (sizeContainer) {
+    sizeContainer.innerHTML = '';
+    if (product.sizes && product.sizes.length) {
+      product.sizes.forEach(size => {
+        const opt = document.createElement('div');
+        opt.classList.add('size-option');
+        opt.textContent = size;
+        opt.onclick = () => {
+          sizeContainer.querySelectorAll('.size-option').forEach(s => s.classList.remove('selected'));
+          opt.classList.add('selected');
+        };
+        sizeContainer.appendChild(opt);
+      });
+      const firstSize = sizeContainer.querySelector('.size-option');
+      if (firstSize) firstSize.classList.add('selected');
+    }
+  }
+  const addBtn = document.getElementById('add-to-cart-btn');
+  if (addBtn) {
+    addBtn.onclick = function() {
+      addToCart(product.name, Number(product.price));
+      addBtn.textContent = 'Adicionado!';
+      setTimeout(() => { addBtn.textContent = 'Adicionar ao Carrinho'; }, 2000);
+    };
+  }
+}
+
+// === MOBILE FIX: 100vh + intro flow + bg music ===
+(function setVH(){ function apply(){ document.documentElement.style.setProperty('--vh',(window.innerHeight*0.01)+'px'); } apply(); window.addEventListener('resize',apply); })();
+document.addEventListener('DOMContentLoaded',()=>{
+  const startBtn=document.getElementById('start-button');
+  const startScreen=document.getElementById('start-screen');
+  const cartIcon=document.getElementById('cart-icon');
+  if(startScreen) startScreen.classList.add('min-100');
+  if(startBtn){
+    startBtn.addEventListener('click',()=>{
+      document.body.classList.add('scene');
+      if(startScreen) startScreen.style.display='none';
+      if(cartIcon) cartIcon.style.display='flex';
+      const bg=document.getElementById('bg-music'); if(bg){ try{ bg.volume=0.2; bg.play(); }catch(e){} }
+    });
+  }
+});
+
+
+
+// === V2: iPhone 15 Pro safe height & gate logo guarantee ===
+(function setVH(){ function apply(){ document.documentElement.style.setProperty('--vh',(window.innerHeight*0.01)+'px'); } apply(); window.addEventListener('resize',apply); })();
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Garantir logo GIF dentro do gate
+  try{
+    const g = document.querySelector('#kgc-gate');
+    if(g){
+      let brand = g.querySelector('.brand');
+      if(!brand){
+        brand = document.createElement('div');
+        brand.className = 'brand';
+        const card = g.querySelector('.card') || g;
+        card.insertBefore(brand, card.firstChild);
+      }
+      if(!brand.querySelector('img')){
+        const img = new Image();
+        img.src = (window.LOGO_URL || 'assets/logo.gif');
+        img.alt = 'KGC';
+        img.className = 'kgc-logo';
+        brand.textContent = '';
+        brand.appendChild(img);
+      }
+    }
+  }catch(e){}
+
+  // Fluxo de intro -> carrinho
+  const startBtn = document.getElementById('start-button');
+  const startScreen = document.getElementById('start-screen');
+  const cartIcon = document.getElementById('cart-icon');
+  if(startScreen) startScreen.classList.add('min-100');
+  if(startBtn){
+    startBtn.addEventListener('click',()=>{
+      document.body.classList.add('scene');
+      if(startScreen) startScreen.style.display = 'none';
+      if(cartIcon) cartIcon.style.display = 'flex';
+      const bg = document.getElementById('bg-music'); if(bg){ try{ bg.volume=0.2; bg.play(); }catch(e){} }
+    });
+  }
+});
+
+
+
+// === V3: Hidden Admin (create user + login) and gate logo spin ===
+(function(){
+  const ADMIN_USERS_KEY = 'kgc_admin_users_v1';
+  const ADMIN_SESSION_KEY = 'kgc_admin_session_v1';
+
+  function isAdmin(){ return !!localStorage.getItem(ADMIN_SESSION_KEY); }
+  function ensureAdminVisibility(){
+    if(isAdmin()) document.body.classList.add('is-admin');
+    else document.body.classList.remove('is-admin');
+  }
+
+  async function sha256(str){
+    const buf = new TextEncoder().encode(str);
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function createAdminUser(username, password){
+    const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+    const salt = Array.from(saltBytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const hash = await sha256(salt + password);
+    const list = JSON.parse(localStorage.getItem(ADMIN_USERS_KEY)||'[]');
+    list.push({u:username, s:salt, h:hash, ts:Date.now()});
+    localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(list));
+  }
+
+  async function loginAdmin(username, password){
+    const list = JSON.parse(localStorage.getItem(ADMIN_USERS_KEY)||'[]');
+    const user = list.find(x=>x.u===username);
+    if(!user) return false;
+    const hash = await sha256(user.s + password);
+    if(hash === user.h){
+      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({u:username, ts:Date.now()}));
+      ensureAdminVisibility();
+      return true;
+    }
+    return false;
+  }
+
+  function logoutAdmin(){
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+    ensureAdminVisibility();
+  }
+
+  function hasAnyAdmin(){
+    const list = JSON.parse(localStorage.getItem(ADMIN_USERS_KEY)||'[]');
+    return list.length > 0;
+  }
+
+  function buildModal(inner){
+    const wrap = document.createElement('div');
+    wrap.id = 'kgc-admin-login';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;';
+    const box = document.createElement('div');
+    box.style.cssText = 'width:min(460px,92vw);background:#111;border:2px solid #f5c542;border-radius:16px;padding:18px 16px;color:#eee;font-family:inherit;';
+    box.innerHTML = inner;
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', (e)=>{ if(e.target===wrap) wrap.remove(); });
+    return wrap;
+  }
+
+  function showAdminLogin(){
+    const createView = `
+      <h3 style="margin:0 0 8px">Criar usuário admin</h3>
+      <p style="opacity:.8;margin:0 0 12px">Defina seu usuário/senha. Fica salvo no seu navegador (localStorage).</p>
+      <label>Usuário</label>
+      <input id="admU" class="kgc-input" style="width:100%;margin:.25rem 0 0.75rem" placeholder="seu_usuario">
+      <label>Senha</label>
+      <input id="admP" type="password" class="kgc-input" style="width:100%;margin:.25rem 0 1rem" placeholder="••••••••">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="admCancel" class="btn">Cancelar</button>
+        <button id="admCreate" class="btn" style="background:#f5c542;color:#000">Criar</button>
+      </div>`;
+
+    const loginView = `
+      <h3 style="margin:0 0 8px">Login admin</h3>
+      <label>Usuário</label>
+      <input id="admLU" class="kgc-input" style="width:100%;margin:.25rem 0 0.75rem" placeholder="seu_usuario">
+      <label>Senha</label>
+      <input id="admLP" type="password" class="kgc-input" style="width:100%;margin:.25rem 0 1rem" placeholder="••••••••">
+      <div style="display:flex;gap:8px;justify-content:space-between">
+        <button id="admLogout" class="btn" style="display:${isAdmin()?'inline-block':'none'}">Sair</button>
+        <div style="flex:1"></div>
+        <button id="admClose" class="btn">Fechar</button>
+        <button id="admLogin" class="btn" style="background:#f5c542;color:#000">Entrar</button>
+      </div>`;
+
+    const modal = buildModal(hasAnyAdmin() ? loginView : createView);
+
+    const close = ()=>modal.remove();
+
+    const admCancel = modal.querySelector('#admCancel');
+    if(admCancel) admCancel.onclick = close;
+
+    const admCreate = modal.querySelector('#admCreate');
+    if(admCreate){
+      admCreate.onclick = async ()=>{
+        const u = modal.querySelector('#admU').value.trim();
+        const p = modal.querySelector('#admP').value;
+        if(!u || !p){ alert('Preencha usuário e senha'); return; }
+        await createAdminUser(u,p);
+        alert('Admin criado. Faça login.');
+        modal.remove(); showAdminLogin();
+      };
+    }
+
+    const admLogin = modal.querySelector('#admLogin');
+    if(admLogin){
+      admLogin.onclick = async ()=>{
+        const u = modal.querySelector('#admLU').value.trim();
+        const p = modal.querySelector('#admLP').value;
+        if(await loginAdmin(u,p)){
+          modal.remove();
+          // tenta abrir painel existente
+          const adminBtn = document.getElementById('admin-fab') || document.querySelector('#admin, .admin, .admin-fab, .admin-bar [role="button"]');
+          if(adminBtn){ adminBtn.click && adminBtn.click(); }
+          else { alert('Admin logado. Painel disponível.'); }
+        } else {
+          alert('Usuário ou senha inválidos.');
+        }
+      };
+    }
+
+    const admClose = modal.querySelector('#admClose');
+    if(admClose) admClose.onclick = close;
+
+    const admLogout = modal.querySelector('#admLogout');
+    if(admLogout) admLogout.onclick = ()=>{ logoutAdmin(); alert('Sessão encerrada.'); close(); };
+  }
+
+  // Trigger oculto: long-press na logo/brand (gate ou header)
+  function attachSecretTrigger(){
+    const target = document.querySelector('#kgc-gate .brand img, .header .brand img, .brand img, .kgc-logo');
+    if(!target) return;
+    let t; let pressed = false;
+    const start = ()=>{ pressed = true; t = setTimeout(()=>{ if(pressed) showAdminLogin(); }, 700); };
+    const end = ()=>{ pressed = false; clearTimeout(t); };
+    ['mousedown','touchstart'].forEach(ev=> target.addEventListener(ev,start,{passive:true}));
+    ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> target.addEventListener(ev,end,{passive:true}));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Marca admin atual
+    ensureAdminVisibility();
+
+    // Garante logo GIF spin no gate
+    const g = document.querySelector('#kgc-gate .brand img');
+    if(g){ g.classList.add('spin'); }
+
+    // Atalhos
+    document.addEventListener('keydown',(e)=>{
+      if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==='a'){ e.preventDefault(); showAdminLogin(); }
+    });
+
+    attachSecretTrigger();
+  });
+})();
+
+
+
+// ===============================
+// Galeria de mídia / lookbook
+// ===============================
+document.addEventListener('DOMContentLoaded', function () {
+  const grid = document.querySelector('.media-grid');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImage = document.getElementById('lightbox-image');
+  const closeBtn = document.querySelector('.lightbox-close');
+
+  if (!grid || !lightbox || !lightboxImage) {
+    return; // página não é a de mídia
+  }
+
+  function openLightbox(src, alt) {
+    lightboxImage.src = src;
+    lightboxImage.alt = alt || 'Foto do lookbook KGC';
+    lightbox.classList.remove('hidden');
+    document.body.classList.add('no-scroll');
+  }
+
+  function closeLightbox() {
+    lightbox.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+  }
+
+  grid.addEventListener('click', function (event) {
+    const img = event.target.closest('img[data-full]');
+    if (!img) return;
+    const fullSrc = img.getAttribute('data-full') || img.src;
+    openLightbox(fullSrc, img.alt);
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function (event) {
+      event.stopPropagation();
+      closeLightbox();
+    });
+  }
+
+  lightbox.addEventListener('click', function (event) {
+    if (event.target === lightbox) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener('keyup', function (event) {
+    if (event.key === 'Escape') {
+      closeLightbox();
+    }
+  });
+
+  // expõe para uso em atributos inline se necessário
+  window.closeLightbox = closeLightbox;
+});

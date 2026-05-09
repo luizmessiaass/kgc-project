@@ -17,6 +17,7 @@ export default function LojaPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
+  const [maxFilter, setMaxFilter] = useState(Infinity)
 
   useEffect(() => {
     supabase
@@ -25,20 +26,33 @@ export default function LojaPage() {
       .eq('active', true)
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setProducts(data ?? [])
+        const list = data ?? []
+        setProducts(list)
         setLoading(false)
+        if (list.length > 0) {
+          const max = Math.ceil(Math.max(...list.map(p => Number(p.price))))
+          setMaxFilter(max)
+        }
       })
   }, [])
 
+  const priceMax = useMemo(
+    () => products.length > 0 ? Math.ceil(Math.max(...products.map(p => Number(p.price)))) : 1000,
+    [products]
+  )
+
   const filtered = useMemo(() => {
-    let list = products.filter(p =>
-      p.name.toLowerCase().includes(search.toLowerCase())
-    )
+    let list = products
+      .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+      .filter(p => Number(p.price) <= maxFilter)
     if (sort === 'price-asc') list = [...list].sort((a, b) => Number(a.price) - Number(b.price))
     else if (sort === 'price-desc') list = [...list].sort((a, b) => Number(b.price) - Number(a.price))
     else if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name))
     return list
-  }, [products, search, sort])
+  }, [products, search, sort, maxFilter])
+
+  const sliderValue = maxFilter === Infinity ? priceMax : Math.min(maxFilter, priceMax)
+  const atMax = sliderValue >= priceMax
 
   return (
     <div className="layout-page">
@@ -69,6 +83,28 @@ export default function LojaPage() {
         </select>
       </div>
 
+      {!loading && products.length > 0 && (
+        <div className="price-range-control">
+          <span className="price-range-label">
+            Preço: {atMax ? 'Todos' : `Até R$ ${sliderValue}`}
+          </span>
+          <input
+            type="range"
+            className="price-range-input"
+            min={0}
+            max={priceMax}
+            step={Math.max(1, Math.floor(priceMax / 50))}
+            value={sliderValue}
+            onChange={e => setMaxFilter(Number(e.target.value))}
+            aria-label="Filtrar por preço máximo"
+          />
+          <div className="price-range-ends">
+            <span>R$ 0</span>
+            <span>R$ {priceMax}</span>
+          </div>
+        </div>
+      )}
+
       <div id="store">
         {loading ? (
           [...Array(6)].map((_, i) => (
@@ -79,7 +115,7 @@ export default function LojaPage() {
             gridColumn: '1 / -1', textAlign: 'center', padding: 40,
             color: '#777', fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem',
           }}>
-            {search ? `Nenhum resultado para "${search}"` : 'Nenhum produto encontrado.'}
+            {search || !atMax ? 'Nenhum produto encontrado.' : 'Nenhum produto encontrado.'}
           </p>
         ) : (
           filtered.map(p => {

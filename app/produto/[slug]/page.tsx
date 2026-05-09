@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import ExploreBar from '../../components/ExploreBar'
@@ -28,6 +28,9 @@ export default function ProdutoPage() {
   const [zoomSrc, setZoomSrc] = useState<string | null>(null)
   const [notification, setNotification] = useState<{ msg: string; error: boolean } | null>(null)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [related, setRelated] = useState<Product[]>([])
+  const [showStickyBtn, setShowStickyBtn] = useState(false)
+  const actionsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     supabase
@@ -42,6 +45,31 @@ export default function ProdutoPage() {
         if (parseList(data.sizes).length === 0) setSelectedSize('Único')
       })
   }, [slug])
+
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('*')
+      .eq('active', true)
+      .limit(10)
+      .then(({ data }) => {
+        if (!data) return
+        const others = data.filter(p => p.slug !== slug)
+        const shuffled = [...others].sort(() => Math.random() - 0.5)
+        setRelated(shuffled.slice(0, 4))
+      })
+  }, [slug])
+
+  useEffect(() => {
+    const el = actionsRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBtn(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [product])
 
   const images = product ? getImages(product) : []
   const colors = product ? parseList(product.colors) : []
@@ -191,16 +219,55 @@ export default function ProdutoPage() {
             </div>
           </div>
 
-          <div className="actions" style={{ marginTop: 30 }}>
+          <div ref={actionsRef} className="actions" style={{ marginTop: 30 }}>
             <button onClick={addToCart}>Adicionar ao Carrinho</button>
             <Link href="/loja"><button>Voltar à Loja</button></Link>
           </div>
         </div>
       </div>
 
+      {/* Related products */}
+      {related.length > 0 && (
+        <div className="related-section">
+          <p className="related-title">Você também pode gostar</p>
+          <div className="related-grid">
+            {related.map(p => (
+              <Link
+                href={`/produto/${p.slug}`}
+                key={p.slug}
+                className="product-card"
+                style={{ textDecoration: 'none', position: 'relative' }}
+                onClick={() => setSlideIndex(0)}
+              >
+                <img
+                  src={getImages(p)[0]}
+                  alt={p.name}
+                  onError={e => { (e.target as HTMLImageElement).src = '/assets/placeholder.png' }}
+                />
+                <h3>{p.name}</h3>
+                <p>R$ {Number(p.price).toFixed(2)}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sticky CTA — mobile only, appears when main actions scroll out of view */}
+      <div className={`sticky-cta${showStickyBtn ? '' : ' hidden'}`}>
+        <button onClick={addToCart} style={{ margin: 0, flex: 1 }}>
+          + Adicionar ao Carrinho
+        </button>
+      </div>
+
       {notification && (
-        <div className="retro-notification" role="alertdialog" aria-modal="true">
-          <p style={{ fontFamily: "'Press Start 2P'", fontSize: '0.75rem', margin: 0, lineHeight: 1.7, color: notification.error ? '#ff5555' : '#f5c542' }}>
+        <div style={{
+          display: 'flex', position: 'fixed', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)', background: '#111',
+          border: '2px solid #f5c542', padding: 25, zIndex: 9999,
+          flexDirection: 'column', gap: 20, width: '90%', maxWidth: 350,
+          boxShadow: '0 0 30px rgba(0,0,0,0.9)', textAlign: 'center',
+        }}>
+          <p style={{ fontFamily: "'Press Start 2P'", fontSize: '0.8rem', margin: 0, lineHeight: 1.6, color: notification.error ? '#ff5555' : '#f5c542' }}>
             {notification.msg}
           </p>
           <button onClick={() => setNotification(null)}>OK</button>

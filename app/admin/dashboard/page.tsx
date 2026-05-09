@@ -42,13 +42,38 @@ export default function AdminDashboard() {
   }
 
   const s: Record<string, React.CSSProperties> = {
-    page: { minHeight: '100vh', background: '#0a0a0a', color: '#fff', fontFamily: "'Oswald', sans-serif", padding: '24px 20px 60px' },
-    header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 },
-    title: { fontFamily: "'Press Start 2P', monospace", color: '#f5c542', fontSize: '1rem', margin: 0 },
-    btnGold: { background: '#f5c542', color: '#111', border: 'none', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontFamily: "'Press Start 2P', monospace", fontSize: '0.65rem' },
-    btnDark: { background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontSize: '0.85rem' },
-    btnRed: { background: '#B22222', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: '0.8rem' },
-    card: { background: '#111', border: '1px solid #222', borderRadius: 10, padding: '16px', display: 'grid', gridTemplateColumns: '64px 1fr auto', gap: 14, alignItems: 'center', marginBottom: 10 },
+    page: { minHeight: '100vh', background: '#0a0a0a', color: '#fff', fontFamily: "'Oswald', sans-serif", padding: '24px 16px 60px', boxSizing: 'border-box' },
+    header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 10 },
+    title: { fontFamily: "'Press Start 2P', monospace", color: '#f5c542', fontSize: 'clamp(0.7rem, 3vw, 1rem)', margin: 0, flexShrink: 0 },
+    /* Action buttons: full touch targets (min 44px), shrink text on narrow screens */
+    btnGold: {
+      background: '#f5c542', color: '#111', border: 'none', borderRadius: 8,
+      padding: '0 14px', cursor: 'pointer', fontFamily: "'Press Start 2P', monospace",
+      fontSize: 'clamp(0.5rem, 2vw, 0.65rem)',
+      minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      whiteSpace: 'nowrap',
+    },
+    btnDark: {
+      background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8,
+      padding: '0 14px', cursor: 'pointer', fontSize: '0.85rem',
+      minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      whiteSpace: 'nowrap',
+    },
+    btnRed: {
+      background: '#B22222', color: '#fff', border: 'none', borderRadius: 6,
+      padding: '0 12px', cursor: 'pointer', fontSize: '0.8rem',
+      minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: '100%', justifyItems: 'center', boxSizing: 'border-box' as const,
+    },
+    /* Card: on mobile stack image+info vertically, keep actions column to the right */
+    card: {
+      background: '#111', border: '1px solid #222', borderRadius: 10, padding: '12px',
+      display: 'grid',
+      /* 56px image | flexible info | action column — works down to 375px */
+      gridTemplateColumns: '56px 1fr auto',
+      gap: 10, alignItems: 'center', marginBottom: 10,
+      boxSizing: 'border-box',
+    },
   }
 
   return (
@@ -64,32 +89,56 @@ export default function AdminDashboard() {
       </div>
 
       {loading ? (
-        <p style={{ color: '#f5c542', fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem' }}>Carregando...</p>
+        <p style={{ color: '#f5c542', fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem', textAlign: 'center', padding: '40px 0' }}>Carregando...</p>
       ) : products.length === 0 ? (
-        <p style={{ color: '#777' }}>Nenhum produto cadastrado.</p>
+        <p style={{ color: '#777', textAlign: 'center', padding: '40px 0' }}>Nenhum produto cadastrado.</p>
       ) : (
         products.map(p => {
           const img = p.images?.[0] ?? `/products/${p.slug}/${p.slug}_1.png`
           return (
             <div key={p.id} style={s.card}>
-              <img src={img} alt={p.name} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid #222' }}
+              {/* Product image — 56×56, hidden on error */}
+              <img src={img} alt={p.name}
+                style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid #222', flexShrink: 0 }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-              <div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
-                <div style={{ color: '#f5c542', fontSize: '0.9rem' }}>R$ {Number(p.price).toFixed(2)}</div>
-                <div style={{ color: '#888', fontSize: '0.8rem', marginTop: 2 }}>{p.slug}</div>
+
+              {/* Name / price / slug — overflow truncated */}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                <div style={{ color: '#f5c542', fontSize: '0.85rem' }}>R$ {Number(p.price).toFixed(2)}</div>
+                <div style={{ color: '#888', fontSize: '0.75rem', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.slug}</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+
+              {/* Action column — 44px min-height on every button */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'stretch', minWidth: 72 }}>
                 <button
                   onClick={() => toggleActive(p)}
-                  style={{ ...s.btnDark, background: p.active ? '#1a3a1a' : '#3a1a1a', color: p.active ? '#4caf50' : '#f44336', border: `1px solid ${p.active ? '#4caf50' : '#f44336'}`, padding: '4px 10px', fontSize: '0.75rem' }}
+                  style={{
+                    background: p.active ? '#1a3a1a' : '#3a1a1a',
+                    color: p.active ? '#4caf50' : '#f44336',
+                    border: `1px solid ${p.active ? '#4caf50' : '#f44336'}`,
+                    borderRadius: 6, padding: '0 8px', cursor: 'pointer', fontSize: '0.65rem',
+                    minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: "'Press Start 2P', monospace", whiteSpace: 'nowrap',
+                    width: '100%', boxSizing: 'border-box',
+                  }}
                 >
                   {p.active ? 'ATIVO' : 'INATIVO'}
                 </button>
-                <Link href={`/admin/dashboard/produto?slug=${p.slug}`}>
-                  <button style={{ ...s.btnDark, padding: '6px 12px', fontSize: '0.8rem' }}>Editar</button>
+                <Link href={`/admin/dashboard/produto?slug=${p.slug}`} style={{ display: 'block' }}>
+                  <button style={{
+                    background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 6,
+                    padding: '0 8px', cursor: 'pointer', fontSize: '0.8rem',
+                    minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '100%', boxSizing: 'border-box',
+                  }}>Editar</button>
                 </Link>
-                <button style={s.btnRed} onClick={() => deleteProduct(p)}>Deletar</button>
+                <button onClick={() => deleteProduct(p)} style={{
+                  background: '#B22222', color: '#fff', border: 'none', borderRadius: 6,
+                  padding: '0 8px', cursor: 'pointer', fontSize: '0.8rem',
+                  minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '100%', boxSizing: 'border-box',
+                }}>Deletar</button>
               </div>
             </div>
           )

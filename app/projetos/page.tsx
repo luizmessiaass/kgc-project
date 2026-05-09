@@ -3,10 +3,10 @@ import ExploreBar from '../components/ExploreBar'
 
 export default function ProjetosPage() {
   return (
-    <div className="layout-page">
-      <h1>Projetos</h1>
+    <div className="layout-page projetos-page">
+      <h1 style={{ textAlign: 'center' }}>Projetos</h1>
 
-      <p style={{ textAlign: 'center', maxWidth: 600, margin: '20px auto' }}>
+      <p className="projetos-intro">
         Em breve você encontrará aqui projetos, coleções e colaborações especiais da marca KGC. Fique ligado para novidades!
       </p>
 

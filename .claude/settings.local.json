@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node __TRACKED_VAR__/.claude/get-shit-done/bin/gsd-tools.cjs commit 'docs: initialize project' --files .planning/PROJECT.md)",
+      "Bash(npx create-next-app@latest . --typescript --app --no-src-dir --no-tailwind --eslint --import-alias \"@/*\")",
+      "Bash(npm audit *)",
+      "Bash(cp -r \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\\\\assets\" \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\\\\public\\\\assets\")",
+      "Bash(cp -r \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\\\\products\" \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\\\\public\\\\products\")",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(Start-Process npm *)",
+      "Bash(Start-Sleep -Seconds 6)",
+      "Bash(Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 5)",
+      "Bash(Select-Object -First 5)",
+      "PowerShell(Start-Process npm -ArgumentList \"run\",\"dev\" -WorkingDirectory \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\" -WindowStyle Hidden; Start-Sleep -Seconds 6; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 5; \"Status: $\\($r.StatusCode\\)\" } catch { \"Erro: $_\" })",
+      "PowerShell(taskkill *)",
+      "Bash(curl *)",
+      "Bash(gh auth *)",
+      "Bash(vercel whoami *)",
+      "Bash(gh repo *)",
+      "Bash(vercel --yes --prod)",
+      "Bash(vercel --yes --prod --name kgc-project)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Luiz\\\\Desktop\\\\PROJETOS\\\\KGC PROJECT\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(vercel env *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: add force-dynamic to admin pages to prevent prerender error *)",
+      "Bash(git push *)",
+      "Bash(vercel --prod --yes)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(git commit -m ' *)",
+      "Bash(vercel ls *)",
+      "Bash(git commit -m 'fix: checkout mobile - form, inputs, spacing, safe areas *)",
+      "Bash(git pull *)",
+      "Bash(git commit -m 'fix: contato/colab/sobre/projetos + admin mobile - layout, spacing, touch targets *)"
+    ]
+  }
+}

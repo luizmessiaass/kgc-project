@@ -14,18 +14,41 @@ export default function ContatoPage() {
   }
 
   return (
-    <div className="layout-page">
-      <h1>Contato</h1>
+    <div className="layout-page contato-page">
+      <h1 style={{ textAlign: 'center' }}>Contato</h1>
 
-      <p><strong>Email:</strong> <a href="mailto:contato@kgc.com" style={{ color: '#f5c542' }}>contato@kgc.com</a></p>
-      <p><strong>Telefone:</strong> <a href="https://wa.me/5511945352659" target="_blank" rel="noopener noreferrer" style={{ color: '#f5c542' }}>+55 (11) 94535-2659</a></p>
-      <p><strong>Endereço:</strong> R. Dom José de Barros, 337 - República, São Paulo - SP, 01038-000</p>
+      <div className="contato-info">
+        <p>
+          <strong>Email:</strong>{' '}
+          <a href="mailto:contato@kgc.com" className="contato-link">
+            contato@kgc.com
+          </a>
+        </p>
+        <p>
+          <strong>WhatsApp:</strong>{' '}
+          <a
+            href="https://wa.me/5511945352659"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contato-link"
+          >
+            +55 (11) 94535-2659
+          </a>
+        </p>
+        <p className="contato-endereco">
+          <strong>Endereço:</strong> R. Dom José de Barros, 337 - República, São Paulo - SP, 01038-000
+        </p>
+      </div>
 
       <h2 style={{ textAlign: 'center', marginTop: 30 }}>Envie uma mensagem</h2>
 
-      {sent && <p style={{ textAlign: 'center', color: '#f5c542', fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem' }}>Mensagem enviada! Em breve entraremos em contato.</p>}
+      {sent && (
+        <p className="contato-sent">
+          Mensagem enviada! Em breve entraremos em contato.
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
+      <form onSubmit={handleSubmit} className="contato-form">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input className="input-retro" type="text" name="nome" placeholder="Seu nome" required />
           <input className="input-retro" type="email" name="email" placeholder="Seu email" required />

@@ -63,15 +63,25 @@ export default function Cart() {
             ) : (
               items.map((item, i) => (
                 <li key={item.id}>
-                  <div>
-                    <span>{item.name}</span>
-                    <br />
-                    <small style={{ color: '#aaa' }}>
-                      {item.size} | {item.color} (x{item.quantity})
-                    </small>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flex: 1 }}>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="cart-thumb"
+                      onError={e => { (e.target as HTMLImageElement).src = '/assets/placeholder.png' }}
+                    />
+                    <div style={{ flex: 1, textAlign: 'left' }}>
+                      <span>{item.name}</span>
+                      <br />
+                      <small style={{ color: '#aaa' }}>
+                        {item.size} | {item.color} (x{item.quantity})
+                      </small>
+                    </div>
                   </div>
-                  <div>
-                    <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
+                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                      R$ {(item.price * item.quantity).toFixed(2)}
+                    </span>
                     <button
                       className="remove-btn"
                       onClick={() => removeItem(i)}

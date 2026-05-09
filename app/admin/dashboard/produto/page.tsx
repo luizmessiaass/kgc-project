@@ -69,15 +69,38 @@ function ProductForm() {
     router.push('/admin/dashboard')
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '12px', background: '#1a1a1a', border: '1px solid #333', borderRadius: 8, color: '#fff', fontSize: 16, boxSizing: 'border-box' }
-  const lbl: React.CSSProperties = { display: 'block', color: '#f5c542', fontFamily: "'Press Start 2P', monospace", fontSize: '0.6rem', marginBottom: 6, marginTop: 16 }
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '12px', background: '#1a1a1a', border: '1px solid #333',
+    borderRadius: 8, color: '#fff',
+    /* 16px prevents iOS auto-zoom on focus */
+    fontSize: 16,
+    boxSizing: 'border-box', minHeight: 48,
+  }
+  const lbl: React.CSSProperties = {
+    display: 'block', color: '#f5c542', fontFamily: "'Press Start 2P', monospace",
+    fontSize: '0.6rem', marginBottom: 6, marginTop: 16,
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', fontFamily: "'Oswald', sans-serif", padding: '24px 20px 60px' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', fontFamily: "'Oswald', sans-serif", padding: '24px 16px 80px', boxSizing: 'border-box' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
-          <button onClick={() => router.push('/admin/dashboard')} style={{ background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>← Voltar</button>
-          <h1 style={{ fontFamily: "'Press Start 2P', monospace", color: '#f5c542', fontSize: '0.9rem', margin: 0 }}>
+
+        {/* Header: back button + title — flex-wrap so they don't overflow on 375px */}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+          <button
+            onClick={() => router.push('/admin/dashboard')}
+            style={{
+              background: '#222', color: '#fff', border: '1px solid #333', borderRadius: 8,
+              padding: '0 14px', cursor: 'pointer', flexShrink: 0,
+              minHeight: 44, display: 'inline-flex', alignItems: 'center',
+              fontSize: '0.85rem', whiteSpace: 'nowrap',
+            }}
+          >← Voltar</button>
+          <h1 style={{
+            fontFamily: "'Press Start 2P', monospace", color: '#f5c542',
+            fontSize: 'clamp(0.6rem, 2.5vw, 0.9rem)', margin: 0,
+            wordBreak: 'break-word',
+          }}>
             {isEdit ? 'EDITAR PRODUTO' : 'NOVO PRODUTO'}
           </h1>
         </div>
@@ -90,9 +113,10 @@ function ProductForm() {
           <input style={inp} required value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))} disabled={isEdit} />
 
           <label style={lbl}>DESCRIÇÃO</label>
-          <textarea style={{ ...inp, resize: 'vertical' }} rows={4} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+          <textarea style={{ ...inp, resize: 'vertical', minHeight: 96 }} rows={4} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {/* Price grid: stacks to single column on narrow phones via media-query-safe inline approach */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
             <div>
               <label style={lbl}>PREÇO (R$)</label>
               <input style={inp} type="number" step="0.01" required value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
@@ -110,39 +134,69 @@ function ProductForm() {
           <input style={inp} placeholder="Ex: P,M,G,GG ou Único" value={form.sizes} onChange={e => setForm(f => ({ ...f, sizes: e.target.value }))} />
 
           <label style={lbl}>STATUS</label>
-          <div style={{ display: 'flex', gap: 10 }}>
+          {/* Status buttons: flex-wrap ensures they don't overflow on 375px */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {[true, false].map(v => (
               <button key={String(v)} type="button"
                 onClick={() => setForm(f => ({ ...f, active: v }))}
-                style={{ padding: '10px 20px', borderRadius: 8, cursor: 'pointer', border: '1px solid', fontSize: '0.85rem', background: form.active === v ? (v ? '#1a3a1a' : '#3a1a1a') : '#1a1a1a', color: form.active === v ? (v ? '#4caf50' : '#f44336') : '#777', borderColor: form.active === v ? (v ? '#4caf50' : '#f44336') : '#333' }}>
+                style={{
+                  flex: '1 1 100px',
+                  minHeight: 48, padding: '0 16px',
+                  borderRadius: 8, cursor: 'pointer', border: '1px solid',
+                  fontSize: '0.85rem',
+                  background: form.active === v ? (v ? '#1a3a1a' : '#3a1a1a') : '#1a1a1a',
+                  color: form.active === v ? (v ? '#4caf50' : '#f44336') : '#777',
+                  borderColor: form.active === v ? (v ? '#4caf50' : '#f44336') : '#333',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  boxSizing: 'border-box',
+                }}>
                 {v ? 'ATIVO' : 'INATIVO'}
               </button>
             ))}
           </div>
 
           <label style={lbl}>IMAGENS</label>
+          {/* Image grid: wraps naturally; thumbnails 80×80 with ×-button */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
             {images.map(url => (
-              <div key={url} style={{ position: 'relative' }}>
-                <img src={url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #333' }} />
+              <div key={url} style={{ position: 'relative', flexShrink: 0 }}>
+                <img src={url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #333', display: 'block' }} />
+                {/* ×-button: slightly larger touch target (24px) for easier tap */}
                 <button type="button" onClick={() => removeImage(url)}
-                  style={{ position: 'absolute', top: -6, right: -6, background: '#B22222', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                  style={{
+                    position: 'absolute', top: -8, right: -8,
+                    background: '#B22222', color: '#fff', border: 'none', borderRadius: '50%',
+                    width: 24, height: 24,
+                    cursor: 'pointer', fontSize: 14,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                    lineHeight: 1, touchAction: 'manipulation',
+                  }}>
                   ×
                 </button>
               </div>
             ))}
+            {/* Add image button — same 80×80 size as thumbnails */}
             <button type="button" onClick={() => fileRef.current?.click()}
-              style={{ width: 80, height: 80, background: '#1a1a1a', border: '2px dashed #333', borderRadius: 6, cursor: 'pointer', color: '#777', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {uploading ? '...' : '+'}
+              style={{
+                width: 80, height: 80, background: '#1a1a1a', border: '2px dashed #444',
+                borderRadius: 6, cursor: 'pointer', color: '#777', fontSize: '1.5rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, touchAction: 'manipulation',
+              }}>
+              {uploading ? '…' : '+'}
             </button>
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
             onChange={e => { if (e.target.files?.[0]) uploadImage(e.target.files[0]) }} />
 
+          {/* Save button: full width, min 52px height */}
           <button type="submit" disabled={saving} style={{
-            marginTop: 28, padding: 16, background: '#f5c542', color: '#111',
+            marginTop: 32,
+            minHeight: 52, padding: '14px 16px',
+            background: '#f5c542', color: '#111',
             border: 'none', borderRadius: 8, fontFamily: "'Press Start 2P', monospace",
             fontSize: '0.8rem', cursor: 'pointer', opacity: saving ? 0.7 : 1,
+            width: '100%', boxSizing: 'border-box',
           }}>
             {saving ? 'SALVANDO...' : 'SALVAR PRODUTO'}
           </button>

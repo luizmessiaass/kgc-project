@@ -1,0 +1,1487 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap');
+/* Pixelated retro font inspired by classic 8‑bit games */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background: #000;
+  color: white;
+  font-family: 'Oswald', sans-serif;
+  /* Use flex by default to vertically center the retro monitor on the intro. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  overflow-x: hidden;
+}
+
+/* Pages other than the intro/home screen should opt out of the full‑screen centering.
+ * When a page uses the class `.page` on its <body>, we override the flex
+ * container so that content starts from the top and can scroll naturally.
+ */
+body.page {
+  display: block;
+  align-items: flex-start;
+  justify-content: flex-start;
+  height: auto;
+  min-height: 100vh;
+  /* Add extra left padding so that page headings do not overlap with
+   * the fixed cart icon. We specify padding in the order: top, right,
+   * bottom, left. */
+  padding: 80px 20px 20px 100px; /* leave space for fixed cart icon */
+  text-align: left;
+}
+
+/* Home page layout overrides.  When the body has class="home" we
+   disable the flex centering used on the default intro and switch to
+   a block layout with padding on the left to avoid overlapping the
+   floating cart icon.  This allows the retro monitor to expand
+   horizontally on larger screens. */
+body.home {
+  display: block;
+  align-items: flex-start;
+  justify-content: flex-start;
+  height: auto;
+  min-height: 100vh;
+  padding: 80px 20px 20px 100px;
+  text-align: left;
+}
+
+/* Apply a subtle scanline effect across the whole page */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(180deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px);
+  z-index: -1;
+}
+
+/* Ensure links retain the golden colour even after being visited.  This prevents
+ * default browser colours (e.g. blue/purple) from appearing on navigation links. */
+a:link, a:visited {
+  color: #f5c542;
+  text-decoration: none;
+}
+a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+/* Retro monitor container.  This element wraps the entire start screen and
+ * main menu on the home page, giving it a beige border reminiscent of
+ * classic CRT monitors.  It uses a neutral light background for the
+ * internal screen area.  We use fixed positioning to center it within
+ * the viewport. */
+#retro-monitor {
+  position: relative;
+  /* Expand the monitor to fill the available horizontal space inside the
+     body.  The surrounding body padding (see body.home) ensures that
+     the monitor does not overlap the floating cart icon. */
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  /* Slightly reduce height so it doesn’t extend beyond the viewport on
+     shorter laptop screens while still filling most of the space. */
+  height: 80vh;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 20px solid #d2c297;
+  border-radius: 15px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.9);
+  background: #e9e7de; /* light beige to mimic AWGE screen */
+  overflow: hidden;
+}
+
+/* No additional responsive margins are required for the retro monitor.
+   The body padding for home/page layouts handles spacing. */
+
+/* Scanline effect overlay on the retro monitor to simulate CRT lines */
+#retro-monitor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(180deg, rgba(0,0,0,0.08) 0 2px, transparent 2px 4px);
+  z-index: 1;
+}
+
+/* Start screen overlay inside the retro monitor.  Initially visible; it
+ * covers the entire monitor and uses a dark background to contrast
+ * against the light monitor. */
+#start-screen {
+  /* Place the start screen relative to the retro monitor rather than absolutely
+     positioning it.  This allows the content to naturally flow inside the
+     monitor and ensures the button remains visible on larger displays.  The
+     element fills the monitor vertically via height:100% so flexbox can
+     centre the children. */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Add vertical spacing between the logo and the entry button so they don't
+     overlap when centred. */
+  gap: 30px;
+  background: #111;
+  z-index: 2;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+/* Main menu wrapper inside the retro monitor.  Hidden by default via the
+ * .hidden class; becomes a flex container once revealed. */
+#main-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 40px 20px 60px;
+  box-sizing: border-box;
+  color: #111;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+  z-index: 2;
+  overflow-y: auto;
+}
+
+/* Menu heading on the main menu */
+.menu-title {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #111;
+}
+
+/* Footer at the bottom of the main menu */
+.menu-footer {
+  margin-top: auto;
+  font-size: 0.6rem;
+  color: #555;
+  text-align: center;
+}
+.menu-footer a {
+  color: #555;
+  text-decoration: none;
+}
+.menu-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Brand title on the start screen */
+.brand-title {
+  font-size: 4rem;
+  margin: 0;
+}
+
+/* Prompt text on the start screen */
+.start-prompt {
+  margin: 20px 0;
+  font-size: 1rem;
+}
+
+/* Hide an element by default when .hidden class is applied (simple utility) */
+.hidden {
+  display: none !important;
+}
+#intro-gif {
+  width: 300px;
+  height: auto;
+  animation: fadeIn 2s ease-in-out;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+#enter-btn {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 1rem;
+  font-family: 'Press Start 2P', monospace;
+  color: #111;
+  background: #f5c542;
+  border: 2px solid #111;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+  text-transform: uppercase;
+
+  /* Override the global button width so the start button doesn’t
+   * stretch across the entire viewport. By default all buttons in this
+   * theme take up 100% of the container width (see the element
+   * selector below). Setting width:auto here ensures this specific
+   * button sizes to its content. */
+  width: auto;
+  display: inline-block;
+}
+#enter-btn:hover {
+  background: #fff;
+  transform: scale(1.05);
+  color: #111;
+}
+
+/*
+ * Ajustes específicos para o botão de entrada na tela inicial.
+ * Este seletor direciona apenas o botão presente no #start-screen,
+ * ampliando sua margem superior, largura e tamanho de fonte para
+ * melhorar a visibilidade em telas grandes e pequenas. Como está
+ * declarado após as regras globais de botões, ele tem precedência.
+ */
+/*
+ * Posiciona o botão "Entrar na cena" fixo na parte inferior do
+ * retro monitor, centralizado horizontalmente. Isso evita que o
+ * botão seja empurrado para fora da viewport quando a tela inicial
+ * se ajusta em diferentes alturas. As larguras e fontes continuam
+ * ajustáveis para desktop e mobile.
+ */
+#start-screen #enter-btn {
+  /* Position the entry button statically below the logo on the start screen.
+     This prevents it from being clipped by the retro monitor container on
+     large screens. We avoid absolute positioning and let flexbox stack
+     the elements naturally. */
+  position: static;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  /* Use gap on the container instead of a margin here */
+  margin-top: 0;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  width: auto;
+}
+
+/* No longer using #menu container; replaced by #main-menu */
+
+.menu-item {
+  font-size: 1.2rem;
+  color: #f5c542;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+.menu-item:hover {
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* Grid layout for menu on home page */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 40px;
+  justify-items: center;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  /* Light background for menu tiles to contrast with the beige monitor */
+  background: #fafafa;
+  border: 2px solid #111;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+.menu-tile i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #111; /* default dark colour; will be overridden by colour classes */
+}
+.menu-tile span {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  color: #111;
+  text-transform: uppercase;
+}
+.menu-tile:hover {
+  transform: scale(1.05);
+  /* On hover, invert the colours for a subtle highlight */
+  background: #111;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+/* Icon colour variants for menu tiles. Apply these classes to the <i>
+ * elements inside the menu tiles to give each option a unique hue
+ * inspired by the AWGE palette. */
+.icon-green { color: #3cb371; }
+.icon-orange { color: #ff8c00; }
+.icon-blue { color: #1e90ff; }
+.icon-purple { color: #8a2be2; }
+.icon-red { color: #dc143c; }
+.icon-darkgreen { color: #228B22; }
+
+/* Override the default icon colour within menu tiles when a colour
+ * class is specified. Because `.menu-tile i` defines a colour for all
+ * icons, we need higher specificity to override it. These selectors
+ * include both the tile and the colour class to ensure the custom
+ * colour is applied. */
+.menu-tile i.icon-green { color: #3cb371; }
+.menu-tile i.icon-orange { color: #ff8c00; }
+.menu-tile i.icon-blue { color: #1e90ff; }
+.menu-tile i.icon-purple { color: #8a2be2; }
+.menu-tile i.icon-red { color: #dc143c; }
+.menu-tile i.icon-darkgreen { color: #228B22; }
+
+/* General heading styles for retro look */
+h1, h2 {
+  font-family: 'Press Start 2P', monospace;
+  color: #f5c542;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+/* Product listing grid on the store page.  We use CSS grid instead of
+ * flexbox to allow the cards to wrap neatly in columns that adapt to the
+ * viewport width.  Each product will occupy at least 180px and expand
+ * to fill available space. */
+#store {
+  display: grid;
+  /* Use a responsive grid that adapts to the viewport.  Each
+   * product card has a minimum width of 180px and will expand to
+   * fill available space.  The gap between cards is slightly
+   * reduced to keep the layout compact on mobile devices. */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  justify-items: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.product {
+  background: #111;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  width: 100%;
+  border: 2px solid #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  box-sizing: border-box;
+}
+
+.product img {
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #f5c542;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', monospace;
+  background: #f5c542;
+  color: #111;
+  border: 2px solid #111;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 5px;
+  text-transform: uppercase;
+}
+
+button:hover {
+  background: #fff;
+  color: #111;
+}
+
+/* Cart icon floating in corner */
+#cart-icon {
+  position: fixed;
+  /* Position the cart icon slightly inset from the top left corner.  The
+   * intro screen and page layout include a thick beige border around
+   * the viewport; if the icon is placed at 20px it sits on top of
+   * that border and blends in.  Moving it to 40px ensures it sits
+   * within the dark canvas where it is visible. */
+  top: 40px;
+  left: 40px;
+  z-index: 50;
+  font-size: 1.5rem;
+  color: #f5c542;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  #cart-icon {
+    top: 20px;
+    left: 20px;
+    font-size: 1.2rem;
+  }
+}
+
+#cart-icon .cart-count {
+  background: #f5c542;
+  color: #111;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  margin-left: 4px;
+}
+
+/* Cart overlay styles */
+#cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+#cart-overlay.hidden {
+  display: none;
+}
+
+#cart-modal {
+  background: #111;
+  border: 2px solid #f5c542;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+#cart-modal ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#cart-modal li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+}
+
+#cart-modal button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: background 0.3s ease;
+}
+
+#cart-modal button:hover {
+  background: #fff;
+}
+
+/* Product detail enhancements */
+.product-images {
+  flex: 1;
+  min-width: 300px;
+}
+
+.product-info {
+  flex: 1;
+  min-width: 300px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: 'Oswald', sans-serif;
+}
+
+.price-section {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.discount-badge {
+  background: #B22222;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.price-section .price {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.options .color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid #fff;
+  cursor: pointer;
+}
+.options .color-swatch.selected {
+  outline: 2px solid #f5c542;
+}
+
+.options .size-option {
+  border: 1px solid #f5c542;
+  padding: 5px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', monospace;
+  color: #f5c542;
+  background: #111;
+  text-transform: uppercase;
+}
+.options .size-option.selected {
+  background: #f5c542;
+  color: #111;
+}
+
+#cart {
+  list-style: none;
+  padding: 0;
+}
+
+#cart li {
+  background: #222;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+/* Remove button inside cart list */
+.remove-btn {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background: #B22222;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.2s ease;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+.remove-btn:hover {
+  background: #D35454;
+}
+
+/* Product detail page layout */
+#product-detail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments for narrower screens */
+@media (max-width: 768px) {
+  body.page {
+    /* Reduce left padding on small screens to maximise content width */
+    padding: 80px 20px 20px 20px;
+  }
+  #product-detail {
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  #product-detail .product-images, #product-detail .product-info {
+    width: 100%;
+    max-width: 100%;
+  }
+  #product-detail .price {
+    font-size: 1.2rem;
+  }
+  h1, h2 {
+    font-size: 1.5rem;
+  }
+}
+
+#product-detail img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  border: 2px solid #f5c542;
+}
+
+#product-detail h2 {
+  margin-top: 20px;
+  font-size: 2rem;
+  color: #FFD700;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+#product-detail p {
+  margin-top: 10px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #ddd;
+  max-width: 600px;
+  font-family: 'Oswald', sans-serif;
+}
+
+#product-detail .price {
+  margin-top: 15px;
+  font-size: 1.5rem;
+  color: #f5c542;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+#product-detail .actions {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+}
+
+#product-detail .actions button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+
+#product-detail .actions button:hover {
+  background: white;
+  color: black;
+}
+
+/*
+ * ======================================================================
+ *  GATE OVERLAY AND ADMIN PANEL STYLES
+ *
+ *  These styles control the appearance of the lead capture gate (kgc-gate)
+ *  and the embedded admin panel for product management.  The overlay
+ *  covers the entire viewport and contains a card with the form.  The
+ *  admin panel slides out from the right and contains form controls
+ *  styled consistently with the rest of the site.
+ */
+
+/* Gate overlay wrapper */
+#kgc-gate {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: none;
+}
+#kgc-gate.open {
+  display: block;
+}
+/* Center wrapper inside gate */
+#kgc-gate .wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+/* Card container for gate */
+#kgc-gate .card {
+  width: min(560px, 100%);
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  color: #fff;
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+}
+/* Brand inside gate */
+#kgc-gate .brand {
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 2px;
+  color: #e72424;
+  margin-bottom: 12px;
+}
+#kgc-gate h1 {
+  font-size: clamp(20px, 6vw, 28px);
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+#kgc-gate p.sub {
+  color: #bdbdbd;
+  margin: 0 0 22px;
+}
+/* Form fields */
+.kgc-field {
+  text-align: left;
+  margin-bottom: 14px;
+}
+.kgc-label {
+  display:block;
+  color:#ddd;
+  font-size:.9rem;
+  margin:0 0 6px;
+}
+.kgc-input {
+  width:100%;
+  background:#111;
+  color:#fff;
+  border:1px solid #2a2a2a;
+  border-radius:10px;
+  padding:14px;
+  font-size:16px;
+  outline:none;
+  box-sizing: border-box;
+}
+/* Row layout for two columns */
+.row {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+@media (max-width:520px) {
+  .row { grid-template-columns:1fr; }
+}
+/* Password container hidden by default */
+.pwd-box {
+  display:none;
+  margin-top:14px;
+  text-align:left;
+}
+.pwd-row {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.eye {
+  min-width:52px;
+  height:52px;
+  border-radius:10px;
+  background:#1a1a1a;
+  border:1px solid #2a2a2a;
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.2rem;
+}
+.btn {
+  width:100%;
+  border:none;
+  border-radius:999px;
+  padding:16px 18px;
+  margin-top:10px;
+  background:#f5c542;
+  color:#111;
+  font-weight:800;
+  letter-spacing:1px;
+  cursor:pointer;
+  font-family:'Press Start 2P', monospace;
+  text-transform: uppercase;
+}
+.btn:active {
+  transform:translateY(1px);
+}
+.hint {
+  color:#bdbdbd;
+  font-size:.85rem;
+  margin-top:6px;
+}
+.err {
+  color:#ff5858;
+  font-size:.85rem;
+  margin-top:6px;
+}
+/* Admin CSV prompt overlay */
+#kgc-admin-prompt {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+}
+#kgc-admin-prompt .box {
+  background:#0f0f0f;
+  border:1px solid #333;
+  border-radius:12px;
+  padding:18px;
+  width:min(360px,92%);
+  color:#fff;
+}
+
+/* Admin panel trigger and container */
+#kgc-admin-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 80;
+  padding: 10px 14px;
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+}
+#kgc-admin-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  z-index: 90;
+  display: none;
+}
+#kgc-admin-sheet {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: min(680px, 100%);
+  background: #111;
+  color: #fff;
+  border-left: 2px solid #f5c542;
+  padding: 16px;
+  overflow: auto;
+  font-family: 'Oswald', sans-serif;
+}
+#kgc-admin-sheet h3 {
+  font-family: 'Press Start 2P', monospace;
+  color: #f5c542;
+  margin: 8px 0 16px;
+}
+#kgc-admin-sheet label {
+  display:block;
+  font-size:.9rem;
+  margin-top:10px;
+}
+#kgc-admin-sheet input[type="text"],
+#kgc-admin-sheet input[type="number"],
+#kgc-admin-sheet textarea {
+  width: 100%;
+  padding: 10px;
+  background: #1b1b1b;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+#kgc-admin-sheet small {
+  color:#bbb;
+}
+#kgc-admin-sheet .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+#kgc-admin-sheet .actions {
+  display:flex;
+  gap:10px;
+  margin-top: 14px;
+}
+#kgc-admin-sheet button {
+  padding: 10px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:700;
+  font-family:'Oswald', sans-serif;
+}
+.btn-gold { background:#f5c542; color:#111; }
+.btn-dark { background:#222; color:#fff; border:1px solid #333; }
+.kgc-list {
+  margin-top: 18px;
+  border-top:1px solid #333;
+  padding-top:10px;
+}
+.kgc-item {
+  border:1px solid #333;
+  border-radius:8px;
+  padding:10px;
+  margin-bottom:10px;
+  display:grid;
+  grid-template-columns: 56px 1fr auto;
+  gap:10px;
+  align-items:center;
+  background:#0f0f0f;
+}
+.kgc-item img {
+  width:56px;
+  height:56px;
+  object-fit:cover;
+  border-radius:6px;
+  border:1px solid #222;
+}
+.kgc-item .meta {
+  font-size:.9rem;
+}
+.kgc-badge {
+  display:inline-block;
+  padding:2px 6px;
+  border:1px solid #444;
+  border-radius:4px;
+  font-size:.75rem;
+  color:#bbb;
+}
+@media (max-width: 560px) {
+  #kgc-admin-sheet .row { grid-template-columns: 1fr; }
+}
+.kgc-img-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px,1fr));
+  gap:10px;
+  margin-bottom:10px;
+}
+.kgc-img {
+  position:relative;
+  background:#0e0e0e;
+  border:1px solid #333;
+  border-radius:8px;
+  padding:6px;
+}
+.kgc-img img {
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:6px;
+  background:#111;
+}
+.kgc-img .tools {
+  position:absolute;
+  inset:auto 6px 6px 6px;
+  display:flex;
+  gap:6px;
+  justify-content:space-between;
+}
+.kgc-chip {
+  position:absolute;
+  top:6px;
+  left:6px;
+  background:#f5c542;
+  color:#111;
+  font-size:.7rem;
+  padding:2px 6px;
+  border-radius:6px;
+  font-weight:700;
+}
+.kgc-btn-mini {
+  font-size:.75rem;
+  padding:4px 6px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* Oculta a linha de junção do GIF rotativo.
+ * Em alguns navegadores, imagens animadas com transformação 3D
+ * apresentam uma linha vertical visível devido à renderização das
+ * faces dianteira e traseira. Definindo backface-visibility como
+ * hidden, evitamos essa linha de junção na logo que gira. */
+.kgc-logo {
+  backface-visibility: hidden;
+}
+
+
+/* === HOTFIX: logo orientation + mobile layout === */
+.brand, .brand *,
+.logo, .logo *,
+.kgc-logo, .kgc-logo * {
+  transform: none !important;
+  rotate: 0deg !important;
+  animation: none !important;
+  writing-mode: horizontal-tb !important;
+}
+.brand img, .logo img, .kgc-logo {
+  display: block;
+  margin-inline: auto;
+  width: clamp(160px, 38vw, 320px);
+  height: auto;
+  image-rendering: pixelated;
+}
+#start-screen .brand, #kgc-gate .brand { transform: none !important; }
+
+/* Mobile grid & paddings */
+:root { --pad: clamp(12px, 4vw, 24px); }
+.menu-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; padding: var(--pad); }
+@media (min-width: 601px){ .menu-grid { grid-template-columns: repeat(3, 1fr); gap:18px; } }
+#store { display:grid; grid-template-columns:1fr; gap:16px; padding: var(--pad); max-width:1100px; margin:0 auto; }
+@media (min-width: 601px){ #store { grid-template-columns: repeat(2, minmax(0,1fr)); gap:18px; } }
+@media (min-width: 900px){ #store { grid-template-columns: repeat(3, minmax(0,1fr)); gap:22px; } }
+#product-detail { padding: var(--pad); max-width:1100px; margin:0 auto; }
+#product-detail .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width: 480px){ #product-detail .actions { grid-template-columns:1fr; } }
+#kgc-gate .wrap { padding: var(--pad); }
+#kgc-gate .card { width: min(560px, 92vw); padding: clamp(18px, 4vw, 28px); margin: 0 auto; }
+
+
+
+/* === V2 MOBILE UNIVERSAL + iPhone safe areas === */
+:root{
+  --pad: clamp(12px, 4vw, 24px);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+.min-100{ min-height: 100dvh; min-height: calc(var(--vh, 1vh) * 100); }
+
+/* Gate full-center with safe areas */
+#kgc-gate{
+  position: fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  padding: max(var(--pad), var(--safe-top)) var(--pad) max(var(--pad), var(--safe-bottom));
+  overflow:auto; z-index:9999;
+}
+#kgc-gate .card{ width:min(620px, 92vw); border-radius:20px; margin:0 auto; }
+#kgc-gate h1, #kgc-gate h2, #kgc-gate .pixel, #kgc-gate .pix, #kgc-gate .headline{
+  font-size: clamp(22px, 6.6vw, 44px);
+  line-height:1.05; text-align:center; word-break:break-word; letter-spacing:0.02em;
+}
+#kgc-gate .lead{ font-size: clamp(13px, 3.6vw, 18px); text-align:center; opacity:.8; }
+
+/* Hard reset orientation of logo everywhere */
+.brand, .brand *,
+.logo, .logo *,
+.kgc-logo, .kgc-logo *{
+  transform:none !important; rotate:0deg !important; animation:none !important;
+  writing-mode: horizontal-tb !important;
+}
+.brand img, .logo img, .kgc-logo{
+  display:block; margin-inline:auto; width: clamp(160px, 38vw, 320px); height:auto; image-rendering:pixelated;
+}
+
+/* Menu + Loja + Produto responsive refinements */
+.menu-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; padding:var(--pad); }
+@media (min-width: 601px){ .menu-grid{ grid-template-columns:repeat(3,1fr); gap:18px; } }
+#store{ display:grid; grid-template-columns:1fr; gap:16px; padding:var(--pad); max-width:1100px; margin:0 auto; }
+@media (min-width: 601px){ #store{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; } }
+@media (min-width: 900px){ #store{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; } }
+#product-detail{ padding:var(--pad); max-width:1100px; margin:0 auto; }
+#product-detail .actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width: 480px){ #product-detail .actions{ grid-template-columns:1fr; } }
+
+/* Inputs: evita zoom no iOS */
+input, select, textarea{ font-size:16px; }
+
+
+
+/* === V3: Gate logo spin + layout & hidden admin === */
+@keyframes kgcSpinY { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+
+#kgc-gate .brand { display:flex; justify-content:center; margin: clamp(12px,3vw,24px) auto clamp(8px,2.2vw,16px); }
+#kgc-gate .kgc-logo { width: clamp(120px, 26vw, 220px); height:auto; transform-origin: 50% 50%; image-rendering: pixelated; }
+#kgc-gate .kgc-logo.spin { animation: kgcSpinY 12s linear infinite; }
+@media (prefers-reduced-motion: reduce) { #kgc-gate .kgc-logo.spin { animation: none; } }
+
+/* Ajustes específicos para a tela inicial (start screen):
+   A logo animada deve ocupar uma área maior dentro do monitor retro,
+   garantindo que a animação não pareça solta. O valor clamp aumenta
+   progressivamente conforme a largura da viewport, com limites
+   definidos para mobile e desktop. A margem inferior cria espaço
+   visual adequado entre a logo e o botão "Entrar na cena". */
+#start-screen .kgc-logo,
+#start-screen .kgc-logo-hero,
+#start-screen .brand img {
+  /* Shrink the logo slightly on the start screen to ensure space for
+     the entry button within the retro monitor at larger viewport sizes. */
+  width: clamp(200px, 40vw, 420px);
+  height: auto;
+  margin-bottom: 40px;
+}
+
+/* Caso o script de substituição não carregue e o elemento .brand permaneça
+   contendo texto, aumentamos a fonte e criamos espaçamento para que o
+   logotipo textual ainda pareça proeminente.  A regra abaixo se
+   aplica apenas ao título dentro da tela inicial e é declarada
+   após as demais para ter prioridade. */
+#start-screen h1.brand {
+  font-size: clamp(36px, 14vw, 180px);
+  line-height: 1;
+  margin-bottom: 40px;
+  color: #f5c542;
+}
+
+/* Headline e subtítulo do gate mais legíveis */
+#kgc-gate .headline, #kgc-gate .pixel, #kgc-gate h1.headline {
+  font-size: clamp(18px, 5.4vw, 34px);
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  text-align: center;
+  max-width: min(88vw, 36ch);
+  margin: 10px auto 18px;
+  text-wrap: balance;
+}
+#kgc-gate .lead { max-width: min(88vw, 44ch); margin: 6px auto 18px; text-align:center; }
+
+/* Esconder todos botões/barras de admin por padrão */
+#admin, .admin, .admin-fab, .admin-bar, #admin-fab, [data-admin] { display: none !important; }
+body.is-admin #admin,
+body.is-admin .admin,
+body.is-admin .admin-fab,
+body.is-admin .admin-bar,
+body.is-admin #admin-fab,
+body.is-admin [data-admin] { display: block !important; }
+
+
+
+/* Mobile override: garante que o botão "Entrar na cena" fique sempre visível
+   no celular, logo abaixo da logo, usando layout normal em vez de posição absoluta. */
+@media (max-width: 768px) {
+  #start-screen #enter-btn {
+    position: static;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin-top: 24px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    width: auto;
+    display: inline-block;
+  }
+}
+
+
+
+/* === Galeria de mídia / lookbook === */
+.media-intro {
+  max-width: 720px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #ddd;
+  margin: 0 0 20px;
+}
+
+.media-gallery {
+  margin: 10px auto 40px;
+  max-width: 1100px;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Cada item funciona como um mini "monitor" para a foto */
+.media-item {
+  /* Each lookbook tile acts like a mini "monitor" with a consistent
+     aspect ratio. Setting aspect-ratio ensures all tiles have the
+     same proportions regardless of the intrinsic orientation of the
+     underlying photo. Overflow hidden crops the image uniformly. */
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  border: 2px solid #f5c542;
+  box-shadow: 0 4px 0 #000;
+  /* Use a portrait aspect ratio (3:4) inspired by the Supreme lookbook.
+     This gives each tile a vertical orientation.  Combined with
+     object-fit: contain on the image, the full photo will display
+     inside the portrait frame without cropping. */
+  aspect-ratio: 3 / 4;
+  /* Ensure the tile grows to fill the available width */
+  width: 100%;
+  height: auto;
+}
+
+/* Thumbs: mostra a foto inteira, sem corte, mesmo que sobrem
+   faixas em cima/baixo ou laterais. */
+.media-item img {
+  /* Fill the entire tile, cropping when necessary to maintain the
+     aspect ratio. The width/height values combined with object-fit
+     ensure the image covers its container instead of letterboxing. */
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Show the entire photo inside the tile.  Using `contain` preserves
+     the original aspect ratio and prevents important parts of the
+     images from being cut off.  This results in letterboxing
+     (unused space) where the image ratio does not perfectly match
+     the tile, but avoids cropping faces or details. */
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.media-item img:hover {
+  transform: scale(1.03);
+  filter: brightness(1.05);
+}
+
+/* Responsivo da grade */
+@media (max-width: 900px) {
+  .media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Lightbox para ampliar foto */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.lightbox img {
+  max-width: min(100%, 900px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 3px solid #f5c542;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  background: #f5c542;
+  color: #111;
+  border: none;
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+}
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* =====================================================================
+   Exploração do site e overlays auxiliares
+   Estas regras fornecem a barra de progresso fixa na parte inferior da tela,
+   o overlay exibido quando todas as áreas forem visitadas e a tela de
+   inicialização temporária ao entrar na cena.  Elas são adicionadas no
+   final do CSS para assegurar que tenham precedência sobre regras
+   anteriores, quando necessário.  */
+
+/* Barra de exploração fixa na base do viewport.  Indica a porcentagem de
+   páginas visitadas. */
+.explore-bar {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Limit the width of the progress bar so it doesn't span the entire
+     viewport.  Use a percentage on small screens and a max on large. */
+  width: 90%;
+  max-width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: #111;
+  border: 2px solid #d2c297;
+  border-radius: 8px;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  z-index: 100;
+}
+.explore-bar span {
+  white-space: nowrap;
+}
+.explore-track {
+  flex: 1;
+  height: 10px;
+  background: #111;
+  border: 2px solid #f5c542;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.explore-progress {
+  height: 100%;
+  width: 0%;
+  background: #f5c542;
+  transition: width 0.4s ease;
+}
+.explore-percent {
+  white-space: nowrap;
+}
+
+/* Overlay mostrado quando a exploração do site atinge 100%. */
+.explore-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  color: #f5c542;
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  z-index: 200;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.explore-overlay.active {
+  display: flex;
+}
+.explore-overlay-content p {
+  margin-bottom: 20px;
+}
+.explore-close-btn {
+  padding: 12px 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  color: #111;
+  background: #f5c542;
+  border: 2px solid #f5c542;
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.explore-close-btn:hover {
+  background: #fff;
+  color: #111;
+}
+
+/* Overlay temporário exibido após o clique em "Entrar na cena".  */
+.init-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #f5c542;
+  font-family: 'Press Start 2P', monospace;
+  z-index: 300;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.init-overlay.active {
+  display: flex;
+}
+.init-overlay p {
+  margin: 10px 0;
+}
+
+/* Link de voltar na página mídia */
+.back-link {
+  display: inline-block;
+  margin-top: 10px;
+  margin-bottom: 40px;
+  color: #f5c542;
+  text-decoration: none;
+  font-family: 'Press Start 2P', monospace;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* === Vídeo destacado na página de mídia === */
+.media-video {
+  margin: 10px auto 30px;
+  max-width: 1100px;
+}
+
+.media-video .video-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  background: #000;
+  border-radius: 12px;
+  border: 2px solid #f5c542;
+  box-shadow: 0 4px 0 #000;
+}
+
+.media-video .video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

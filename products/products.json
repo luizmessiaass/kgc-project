@@ -1,0 +1,56 @@
+[
+  {
+    "slug": "kgc-camo-off-white",
+    "name": "KGC Camo Off-White",
+    "description": "A peça central do drop ALPINISTA SOCIAL. Esta camiseta não é apenas vestuário, é um manifesto. Em base Off-White, ela traz o logo KGC preenchido com nossa textura de camuflagem exclusiva, representando a batalha diária do empreendedor criativo. Nas costas, o código de conduta: 'SEM CORRE, SEM GANHO'. Modelagem Boxy Oversized.",
+    "price": 149.99,
+    "original_price": 189.90,
+    "colors": "Off-White",
+    "sizes": "PP,P,M,G,GG"
+  },
+  {
+    "slug": "hustler-black",
+    "name": "Hustler - Black",
+    "description": "Para o Alpinista Social, 'Hustler' não é apenas uma palavra, é o modo de operação padrão. Esta peça em preto profundo carrega a estampa 'HUSTLER' em arco com preenchimento camuflado. Conta com o número 8 na parte de trás representando a materialização de suas conquistas.",
+    "price": 149.99,
+    "original_price": 189.90,
+    "colors": "Preto",
+    "sizes": "PP,P,M,G,GG"
+  },
+  {
+    "slug": "kgc-collegiate-black-yellow",
+    "name": "Camiseta Boxy KGC OG - Black/Yellow",
+    "description": "A essência da marca em sua forma mais pura. Esta camiseta traz a tipografia clássica universitária (Collegiate) com o bordado em alto relevo e contorno Amarelo Ouro sobre o fundo preto. É o brasão do time que joga para vencer. Simples, direta e impactante.",
+    "price": 250.00,
+    "original_price": 299.90,
+    "colors": "Preto",
+    "sizes": "P,M,G"
+  },
+  {
+    "slug": "bone-trucker-kgc-keep-going",
+    "name": "Boné Trucker KGC 'Keep Going'",
+    "description": "Sua visão precisa estar protegida. O Boné Trucker KGC combina a funcionalidade da tela traseira com a atitude da aba curva camuflada. No painel frontal, a mensagem que guia nossa jornada: 'KEEP GOING, CORREDOR!'. O acessório indispensável para quem está na rua fazendo acontecer.",
+    "price": 110.00,
+    "original_price": 139.99,
+    "colors": "Camuflado",
+    "sizes": "Único"
+  },
+  {
+    "slug": "bermuda-cargo-tatica-camo",
+    "name": "Bermuda Cargo Tática - Camo",
+    "description": "Utilitária. Robusta. Pronta para tudo. Desenhada pensando na funcionalidade do dia a dia urbano. Com bolsos laterais espaçosos e uma estampa camuflada autêntica, ela une o estilo militar com a necessidade prática. Tecido Sarja/Brim resistente.",
+    "price": 200.00,
+    "original_price": 259.90,
+    "colors": "Camuflado",
+    "sizes": "40,42,44,46,48"
+  },
+  {
+    "slug": "jhorts-moletom-kgc-essential",
+    "name": "Jhorts Moletom KGC Essential - Black",
+    "description": "Conforto estratégico para os dias de base. O Shorts de Moletom KGC é a peça de versatilidade total. Com corte anatômico e recortes estratégicos, oferece o conforto necessário para o home office ou pós-corre. Minimalista, preto e essencial.",
+    "price": 79.99,
+    "original_price": 99.99,
+    "colors": "Preto",
+    "sizes": "P,M,G"
+  }
+]
